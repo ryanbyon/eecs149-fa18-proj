@@ -2,9 +2,8 @@
 import numpy as np
 import argparse
 import cv2
-
-def dist(a, b):
-	return (a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1])
+from sklearn.cluster import KMeans
+from projection import projection
 
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
@@ -14,12 +13,9 @@ args = vars(ap.parse_args())
 # load the image
 image = cv2.imread(args["image"])
 
-
-
+# Threshold values for color filtration
 lower =	[200, 200, 200]
 upper = [255, 255, 255]
-
-
 
 # create NumPy arrays from the boundaries
 lower = np.array(lower, dtype = "uint8")
@@ -30,13 +26,13 @@ upper = np.array(upper, dtype = "uint8")
 mask = cv2.inRange(image, lower, upper)
 output = cv2.bitwise_and(image, image, mask = mask)
 
-cv2.imwrite("white.png", output)
-output = cv2.blur(output, (4,4))
-cv2.imwrite("whiteblur.png", output)
+blurred_output = cv2.blur(output, (4,4))
 
+#
 # FINDING CORNERS 
-filename = 'whiteblur.png'
-img = cv2.imread(filename)
+#
+
+img = blurred_output
 gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 
 gray = np.float32(gray)
@@ -46,13 +42,21 @@ dst = cv2.cornerHarris(gray,2,3,0.04)
 dst = cv2.dilate(dst,None)
 
 # Threshold for an optimal value, it may vary depending on the image.
+candidate_corners = np.asarray(np.where(dst>0.07*dst.max())).T
 
-img[dst>0.07*dst.max()]=[0,0,255]
+#
+# CLUSTERING CANDIDATE CORNERS
+#
 
-B = np.where(dst>0.07*dst.max())
-pts = [(B[0][i], B[1][i]) for i in range(len(B[0]))]
-print(pts)
+kmeans = KMeans(n_clusters=4, random_state=0).fit(candidate_corners)
 
-cv2.imshow('dst', img)
-if cv2.waitKey(0) & 0xff == 27:
-    cv2.destroyAllWindows()
+# Sort in order upper_left, upper_right, lower_left, lower_right
+sum_centers = np.sum(kmeans.cluster_centers_, axis=1)
+sorted_indices = sum_centers.argsort()
+sorted_centers = np.take(kmeans.cluster_centers_, sorted_indices, axis=0)
+if sorted_centers[1][0] < sorted_centers[2][0]:
+	sorted_centers[1], sorted_centers[2] = sorted_centers[2], sorted_centers[1]
+
+# centers = np.asarray([[87, 130], [82, 276], [234, 107], [221, 318]])
+
+projection(args["image"], 500, sorted_centers.astype(int))
