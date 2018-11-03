@@ -15,8 +15,8 @@ image = cv2.imread(args["image"])
 
 # Threshold values for color filtration
 green = [9, 174, 144]
-lower =	[140, 160, 0]
-upper = [170, 190, 40]
+lower =	[140, 140, 0]
+upper = [230, 230, 60]
 
 # create NumPy arrays from the boundaries
 lower = np.array(lower, dtype = "uint8")
@@ -43,4 +43,4 @@ if sorted_centers[1][0] < sorted_centers[2][0]:
 for i in sorted_centers:
 	i[0], i[1] = i[1], i[0]
 
-projection(args["image"], 500, sorted_centers.astype(np.float32))
+projected = projection(args["image"], 91 * 6, 124 * 6, sorted_centers.astype(np.float32))
