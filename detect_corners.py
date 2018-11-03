@@ -14,8 +14,9 @@ args = vars(ap.parse_args())
 image = cv2.imread(args["image"])
 
 # Threshold values for color filtration
-lower =	[200, 200, 200]
-upper = [255, 255, 255]
+green = [9, 174, 144]
+lower =	[140, 160, 0]
+upper = [170, 190, 40]
 
 # create NumPy arrays from the boundaries
 lower = np.array(lower, dtype = "uint8")
@@ -25,30 +26,11 @@ upper = np.array(upper, dtype = "uint8")
 # the mask
 mask = cv2.inRange(image, lower, upper)
 output = cv2.bitwise_and(image, image, mask = mask)
+cv2.imwrite("greencorners.png", output)
 
-blurred_output = cv2.blur(output, (4,4))
+green_corners = np.asarray(np.where(np.any(output != [0, 0, 0], axis=-1))).T
 
-#
-# FINDING CORNERS 
-#
-
-img = blurred_output
-gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-
-gray = np.float32(gray)
-dst = cv2.cornerHarris(gray,2,3,0.04)
-
-#result is dilated for marking the corners, not important
-dst = cv2.dilate(dst,None)
-
-# Threshold for an optimal value, it may vary depending on the image.
-candidate_corners = np.asarray(np.where(dst>0.07*dst.max())).T
-
-#
-# CLUSTERING CANDIDATE CORNERS
-#
-
-kmeans = KMeans(n_clusters=4, random_state=0).fit(candidate_corners)
+kmeans = KMeans(n_clusters=4, random_state=0).fit(green_corners)
 
 # Sort in order upper_left, upper_right, lower_left, lower_right
 sum_centers = np.sum(kmeans.cluster_centers_, axis=1)
@@ -56,7 +38,9 @@ sorted_indices = sum_centers.argsort()
 sorted_centers = np.take(kmeans.cluster_centers_, sorted_indices, axis=0)
 if sorted_centers[1][0] < sorted_centers[2][0]:
 	sorted_centers[1], sorted_centers[2] = sorted_centers[2], sorted_centers[1]
+	sorted_centers[2], sorted_centers[3] = sorted_centers[3], sorted_centers[2]
 
-# centers = np.asarray([[87, 130], [82, 276], [234, 107], [221, 318]])
+for i in sorted_centers:
+	i[0], i[1] = i[1], i[0]
 
-projection(args["image"], 500, sorted_centers.astype(int))
+projection(args["image"], 500, sorted_centers.astype(np.float32))
