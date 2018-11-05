@@ -16,10 +16,6 @@ image = cv2.imread(args["image"])
 lower =	np.array([140, 140, 0], dtype="uint8")
 upper = np.array([230, 230, 60], dtype = "uint8")
 
-# Threshold values for maze wall detection (white)
-white_lower = np.array([230, 230, 230], dtype = "uint8")
-white_upper = np.array([255, 255, 255], dtype = "uint8")
-
 # Desired resolution of projected image
 width, height = 130 * 6, 91 * 6
 
