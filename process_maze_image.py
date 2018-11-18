@@ -6,7 +6,7 @@ import cv2
 from sklearn.cluster import KMeans
 from projection import projection
 from image_utils import detect_corners, gridify, overlay_visualize
-from maze_utils import breadth_first_search, find_path, compute_wall_distances, create_direction_matrix
+from maze_utils import breadth_first_search, find_path, compute_wall_distances, create_direction_matrix, Direction
 
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
@@ -47,5 +47,5 @@ breadth_first_search(bools, (40, 58), directions_simple, distances)
 directions_smart = create_direction_matrix(bools, distances, distances_from_walls)
 
 path = find_path((1, 1), directions_smart)
-for direc, square in path:
-	print(square)
+for e in path:
+	print(e)

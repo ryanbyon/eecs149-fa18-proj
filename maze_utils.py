@@ -22,6 +22,17 @@ class Direction(Enum):
 		else:
 			return Direction.NOWHERE
 
+	# What direction to turn to face other from self
+	def turn_calculation(self, other):
+		if other.value - self.value > 0 or self == Direction.LEFT and other == Direction.DOWN:
+			return Turn.RIGHT_TURN
+		else:
+			return Turn.LEFT_TURN
+
+class Turn(Enum):
+	LEFT_TURN = 0
+	RIGHT_TURN = 1
+
 # Returns the valid neighboring grid squares
 # paired with the DIRECTION to RETURN to the first square
 def neighbors(point, grid):
@@ -99,5 +110,22 @@ def find_path(source, directions):
 		elif direction == Direction.DOWN.value:
 			curr = (curr[0]+1, curr[1])
 
-	return path
+	return process_path(path, Direction.RIGHT)
 
+# Input: [255, 255, 191]
+# Output: [Forward, Forward, Turn90LEFT, FORWARD]
+def process_path(path, initial_direction):
+	result = []
+	curr_length = 1
+	curr_dir = initial_direction
+	for direction, square in path:
+		direction = Direction(direction)
+		if curr_dir == direction:
+			curr_length += 1
+		else:
+			result.append(curr_length)
+			result.append(curr_dir.turn_calculation(direction))
+			curr_dir = direction
+			curr_length = 1
+
+	return result
