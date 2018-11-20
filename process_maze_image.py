@@ -3,6 +3,8 @@ import numpy as np
 np.set_printoptions(threshold=np.nan)
 import argparse
 import cv2
+import bluetooth
+import time
 from sklearn.cluster import KMeans
 from projection import projection
 from image_utils import detect_corners, gridify, overlay_visualize
@@ -46,6 +48,22 @@ compute_wall_distances(bools, distances_from_walls)
 breadth_first_search(bools, (40, 58), directions_simple, distances)
 directions_smart = create_direction_matrix(bools, distances, distances_from_walls)
 
-path = find_path((1, 1), directions_smart)
-for e in path:
-	print(e)
+path = find_path((1, 1), directions_smart)[1:]
+
+path_modified = [str(el) if type(el) == int else str(el.value) for el in path]
+ 
+bd_addr = "00:14:03:06:75:C2" 
+port = 1
+sock = bluetooth.BluetoothSocket (bluetooth.RFCOMM)
+sock.connect((bd_addr,port))
+
+index = 0
+while index < len(path_modified):
+	sock.send(str(path_modified[index]))
+	sock.send(str(path_modified[index+1]))
+	time.sleep(1) # Wait for the car to finish the previous two steps
+	index += 2
+
+sock.close()
+
+print(path_modified)

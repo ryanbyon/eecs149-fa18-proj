@@ -1,6 +1,5 @@
 import numpy as np
 import cv2
-import matplotlib.pyplot as plt
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -29,11 +28,3 @@ def projection(img_name, width, height, corners):
 
 	return final
 
-# If you want to manually pick the four corners
-def pick_corners(img):
-	print('Pick 4 corners on the source img.')
-	plt.imshow(img)
-	pts = plt.ginput(4, timeout=0)   
-	plt.close()
-
-	print(pts)
