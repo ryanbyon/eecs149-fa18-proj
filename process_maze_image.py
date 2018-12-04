@@ -11,6 +11,8 @@ from projection import projection
 from image_utils import detect_corners, gridify, gridify2, overlay_visualize, pad_walls
 from maze_utils import breadth_first_search, find_path, compute_wall_distances, create_direction_matrix, Direction, print_path
 
+maze_image_filepath = "maze_images/current_maze.jpg"
+
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", help = "path to the image")
