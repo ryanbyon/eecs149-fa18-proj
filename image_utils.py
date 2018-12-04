@@ -4,6 +4,7 @@ import argparse
 import cv2
 from sklearn.cluster import KMeans
 from projection import projection
+from math import ceil
 
 # MAGIC NUMBERS
 WALL_THRESHOLD_DOWNSIZING = 77 # When downsizing the maze image to generate maze grid
@@ -39,6 +40,8 @@ def detect_corners(image, corner_lower_bgr, corner_upper_bgr):
 # Takes a projected image of the maze and outputs a downscaled image whose pixel values are 
 # either [255, 255, 255] (white=wall is present) or [0, 0 0] (black=wall not present).
 #
+# Also pad the borders with some white.
+#
 # projected: projected image
 # grid_width: desired width in grid squares
 # grid_height: desired height in grid squares
@@ -52,12 +55,48 @@ def gridify(projected, grid_width, grid_height, wall_threshold):
 	threshed_downsized = cv2.threshold(downsized, WALL_THRESHOLD_DOWNSIZING, 255, cv2.THRESH_BINARY)[1]
 	return threshed_downsized
 
+# Takes a projected image of the maze and outputs a downscaled image whose pixel values are 
+# either [255, 255, 255] (white=wall is present) or [0, 0 0] (black=wall not present).
+#
+# Also pad the borders with some white. And make sure none of the pixels in the robot are set as walls
+#
+# projected: projected image
+# downscale_factor: each square(this number) patch of the image becomes 1 grid square
+# wall_threshold: threshold for detecting walls in the projected image
+def gridify2(projected, downscale_factor, wall_threshold, robot_top_left, robot_bottom_right):
+	BLACK = 0
+	projected = cv2.cvtColor(projected, cv2.COLOR_BGR2GRAY)
+	threshed = cv2.threshold(projected, wall_threshold, 255, cv2.THRESH_BINARY)[1]
+	threshed[robot_top_left[1]:robot_bottom_right[1], robot_top_left[0]:robot_bottom_right[0]] = BLACK
+
+	grid_height, grid_width = projected.shape
+	downsized = cv2.resize(threshed, dsize = (grid_width//downscale_factor, grid_height//downscale_factor), interpolation=cv2.INTER_AREA)
+
+	threshed_downsized = cv2.threshold(downsized, WALL_THRESHOLD_DOWNSIZING, 255, cv2.THRESH_BINARY)[1]
+	return threshed_downsized
+
+# Takes the projected image of the maze and outputs this image, padded
+# with a few white pixels so that both the height and width are divisible
+# by desired_downscale_factor.
+def pad_walls(projected, desired_downscale_factor):
+	WHITE = [255, 255, 255]
+	height, width = projected.shape[:2]
+	target_height = closest_multiple(height, desired_downscale_factor)
+	target_width = closest_multiple(width, desired_downscale_factor)
+	height_diff, width_diff = target_height - height, target_width - width
+
+	top, left = height_diff // 2, width_diff // 2
+	bottom, right = height_diff - top, width_diff - left
+
+	return cv2.copyMakeBorder(projected, top, bottom, left, right, cv2.BORDER_CONSTANT, value=WHITE)
+
 # Overlays a downscaled grid onto a projected image of the maze.
 #
 # proj: projected image
 # grid: downscaled grid
 def overlay_visualize(proj, grid):
 	upsized_grid = cv2.resize(grid, dsize = (proj.shape[1], proj.shape[0]), interpolation=cv2.INTER_NEAREST)
+	upscale_factor = proj.shape[1] // grid.shape[1]
 	threshed_upsized_grid = cv2.threshold(upsized_grid, WALL_THRESHOLD_UPSIZING, 255, cv2.THRESH_BINARY)[1]
 
 	threshed_upsized_grid = cv2.cvtColor(threshed_upsized_grid, cv2.COLOR_GRAY2BGR)
@@ -67,7 +106,7 @@ def overlay_visualize(proj, grid):
 	projected_maze_png = add_alpha_channel(proj)
 
 	overlay = cv2.addWeighted(projected_maze_png, 0.8, threshed_upsized_grid_png, 0.2, 0)
-	overlay_grid_lines(overlay)
+	overlay_grid_lines(overlay, upscale_factor)
 	return overlay
 
 # Takes in a 3-channel image and outputs a 4-channel image where the
@@ -87,8 +126,8 @@ def add_alpha_channel(image):
 	return cv2.merge((b_channel, g_channel, r_channel, alpha_channel))
 
 # Draws grid lines on an image
-def overlay_grid_lines(image):
-	dx, dy = 13,13
+def overlay_grid_lines(image, upscale_factor):
+	dx, dy = upscale_factor, upscale_factor
 
 	# Custom (rgb) grid color
 	grid_color = [0,0,0,255]
@@ -96,3 +135,9 @@ def overlay_grid_lines(image):
 	# Modify the image to include the grid
 	image[:,::dy,:] = grid_color
 	image[::dx,:,:] = grid_color
+
+# Return the smallest multiple of b larger than a, assuming a >> b
+#
+# Helps in padding borders with white
+def closest_multiple(a, b):
+	return ceil(a / b) * b

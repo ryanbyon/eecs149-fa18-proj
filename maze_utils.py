@@ -86,6 +86,7 @@ def breadth_first_search(grid, dest, directions, distances):
                 distances[adjacent[0]][adjacent[1]] = distances[vertex[0]][vertex[1]] + 1
 
 def create_direction_matrix(grid, distances, wall_distances):
+	# Initialize as Direction.NOWHERE.value
 	result = np.zeros(shape=grid.shape, dtype="uint8")
 	for i in range(len(result)):
 		for j in range(len(result[0])):
@@ -98,6 +99,7 @@ def create_direction_matrix(grid, distances, wall_distances):
 def find_path(source, directions):
 	path = []
 	curr = source
+	# while we're not inside a wall or at the destination pointed to by directions
 	while directions[curr[0]][curr[1]] != Direction.NOWHERE.value:
 		direction = directions[curr[0]][curr[1]]
 		path.append((direction, curr))
@@ -110,7 +112,7 @@ def find_path(source, directions):
 		elif direction == Direction.DOWN.value:
 			curr = (curr[0]+1, curr[1])
 
-	return process_path(path, Direction.RIGHT)
+	return process_path(path, Direction.LEFT)
 
 # Input: [255, 255, 191]
 # Output: [Forward, Forward, Turn90LEFT, FORWARD]

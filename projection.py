@@ -23,8 +23,5 @@ def projection(img_name, width, height, corners):
 	M = cv2.getPerspectiveTransform(corners, source)
 	final = cv2.warpPerspective(img, M, (height, width))
 
-	cv2.imshow("final", final)
-	cv2.waitKey(0)
-
 	return final
 
