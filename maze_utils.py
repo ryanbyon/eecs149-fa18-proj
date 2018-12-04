@@ -6,9 +6,9 @@ from enum import Enum
 class Direction(Enum):
 	NOWHERE = 0
 	LEFT = 63
-	UP = 127
-	RIGHT = 191
-	DOWN = 255
+	UP = 126
+	RIGHT = 189
+	DOWN = 252
 
 	def opposite(self):
 		if self == Direction.LEFT:
@@ -24,7 +24,11 @@ class Direction(Enum):
 
 	# What direction to turn to face other from self
 	def turn_calculation(self, other):
-		if other.value - self.value > 0 or self == Direction.LEFT and other == Direction.DOWN:
+		if self == other:
+			return Turn.DONT_TURN
+		elif abs(other.value - self.value) == 126:
+			return Turn.TURN_180
+		elif other.value - self.value == 63 or self == Direction.DOWN and other == Direction.LEFT:
 			return Turn.RIGHT_TURN
 		else:
 			return Turn.LEFT_TURN
@@ -32,6 +36,8 @@ class Direction(Enum):
 class Turn(Enum):
 	LEFT_TURN = 0
 	RIGHT_TURN = 1
+	TURN_180 = 2
+	DONT_TURN = 3
 
 # Returns the valid neighboring grid squares
 # paired with the DIRECTION to RETURN to the first square
@@ -96,7 +102,7 @@ def create_direction_matrix(grid, distances, wall_distances):
 				result[i][j] = best_direction[1].opposite().value
 	return result
 
-def find_path(source, directions):
+def find_path(source, directions, initial_direction):
 	path = []
 	curr = source
 	# while we're not inside a wall or at the destination pointed to by directions
@@ -112,12 +118,14 @@ def find_path(source, directions):
 		elif direction == Direction.DOWN.value:
 			curr = (curr[0]+1, curr[1])
 
-	return process_path(path, Direction.LEFT)
+	return process_path(path, initial_direction)
 
 # Input: [255, 255, 191]
-# Output: [Forward, Forward, Turn90LEFT, FORWARD]
+# Output: [DONT_TURN, 2, TURN_LEFT, 1]
 def process_path(path, initial_direction):
 	result = []
+	if initial_direction == Direction(path[0][0]):
+		result.append(Turn.DONT_TURN)
 	curr_length = 1
 	curr_dir = initial_direction
 	for direction, square in path:
@@ -131,3 +139,10 @@ def process_path(path, initial_direction):
 			curr_length = 1
 
 	return result
+
+def print_path(path):
+	index = 0
+	while (index < len(path)):
+		print(Turn(path[index]), path[index + 1])
+		print()
+		index += 2

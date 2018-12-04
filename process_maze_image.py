@@ -9,7 +9,7 @@ import time
 from sklearn.cluster import KMeans
 from projection import projection
 from image_utils import detect_corners, gridify, gridify2, overlay_visualize, pad_walls
-from maze_utils import breadth_first_search, find_path, compute_wall_distances, create_direction_matrix, Direction
+from maze_utils import breadth_first_search, find_path, compute_wall_distances, create_direction_matrix, Direction, print_path
 
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
@@ -17,7 +17,7 @@ ap.add_argument("-i", "--image", help = "path to the image")
 ap.add_argument("-r", "--robot", help = "path to the robot")
 args = vars(ap.parse_args())
 image = cv2.imread(args["image"])
-robot = cv2.imread(args["robot"])
+robot = cv2.imread(args["robot"]) # It's facing left
 
 # Threshold values for maze corner detection (green)
 lower =	np.array([140, 140, 0], dtype="uint8")
@@ -39,14 +39,37 @@ desired_downscale_factor = 20
 # Threshold when processing raw projected maze image
 wall_threshold = 210
 
+
+
+
+
+
 sorted_centers = detect_corners(image, lower, upper)
 
 projected = projection(args["image"], height, width, sorted_centers.astype(np.float32))
 padded = pad_walls(projected, desired_downscale_factor)
 
 # Find robot within padded
-res = cv2.matchTemplate(robot, padded, cv2.TM_SQDIFF)
-min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+
+# Get all four orientations
+rows, cols = robot.shape[:2]
+rotation_matrix = cv2.getRotationMatrix2D((cols/2, rows/2), -90, 1)
+robot_left = robot
+robot_down = cv2.warpAffine(robot_left, rotation_matrix, (cols, rows))
+robot_right = cv2.warpAffine(robot_down, rotation_matrix, (cols, rows))
+robot_up = cv2.warpAffine(robot_right, rotation_matrix, (cols, rows))
+
+robot_orientations = [robot_left, robot_down, robot_right, robot_up]
+template_match_results = map(lambda orientation: cv2.matchTemplate(orientation, padded, cv2.TM_SQDIFF), robot_orientations)
+template_match_results = enumerate(list(map(lambda res: cv2.minMaxLoc(res), template_match_results)))
+best_result, best_i = None, 47
+for i, res in template_match_results:
+	if best_i == 47 or res[0] < best_result[0]:
+		best_result = res
+		best_i = i
+
+initial_direction = Direction((best_i + 1) * 63)
+min_val, max_val, min_loc, max_loc = best_result
 top_left = min_loc
 bottom_right = (min_loc[0] + robot.shape[1], min_loc[1] + robot.shape[0])
 robot_center = ((top_left[0] + bottom_right[0])//2, (top_left[1] + bottom_right[1])//2)
@@ -74,7 +97,8 @@ directions_smart = create_direction_matrix(bools_buffered, distances, distances_
 cv2.imwrite("distances2.png", distances)
 cv2.imwrite("magic2.png", directions_smart)
 
-path = find_path(robot_center_gridsquare, directions_smart)
+print(initial_direction)
+path = find_path(robot_center_gridsquare, directions_smart, initial_direction)
 
 path_modified = [str(el) if type(el) == int else str(el.value) for el in path]
  
@@ -92,4 +116,4 @@ path_modified = [str(el) if type(el) == int else str(el.value) for el in path]
 
 # sock.close()
 
-print(path_modified)
+print_path(path)
