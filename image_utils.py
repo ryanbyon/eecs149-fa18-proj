@@ -56,8 +56,7 @@ def detect_corners(image, corner_lower_bgr, corner_upper_bgr):
 	result[1] = np.asarray([np.min(group1[1]), np.max(group1[0])])
 	result[2] = np.asarray([np.max(group2[1]), np.min(group2[0])])
 	result[3] = np.asarray([np.max(group3[1]), np.max(group3[0])])
-	print(result)
-	return result
+	return result.astype(np.float32)
 
 # Takes a projected image of the maze and outputs a downscaled image whose pixel values are 
 # either [255, 255, 255] (white=wall is present) or [0, 0 0] (black=wall not present).

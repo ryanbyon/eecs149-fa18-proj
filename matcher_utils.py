@@ -34,7 +34,6 @@ def find_robot_angle(robot_img=cv2.imread("maze_images/raw_robot2.png"), maze_im
 	dst_pts = np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
 
 	M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0)
-	print(M)
 	matchesMask = mask.ravel().tolist()
 
 
@@ -54,7 +53,6 @@ def find_robot_angle(robot_img=cv2.imread("maze_images/raw_robot2.png"), maze_im
 
 	# Transformed upper left, transformed upper right.
 	p2, q2 = dst[0][0], dst[3][0]
-	print(p2, q2)
 	dy = q2[1] - p2[1]
 	dx = q2[0] - p2[0]
 

@@ -133,7 +133,6 @@ def find_path(source, directions, initial_angle):
 def process_path(path, initial_angle):
 	result = []
 	index, prev_dir = 0, Direction(path[0][0])
-	print(prev_dir, flush=True)
 	result.append(prev_dir.turn_calculation(initial_angle))
 	curr_runlength = 0
 	while index < len(path):
