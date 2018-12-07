@@ -29,7 +29,7 @@ def find_robot_angle(robot_img=cv2.imread("maze_images/raw_robot2.png"), maze_im
 	for m,n in matches:
 	    if m.distance < 0.7*n.distance:
 	        good.append(m)
-
+	
 	src_pts = np.float32([ kp1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
 	dst_pts = np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
 
@@ -62,10 +62,10 @@ def find_robot_angle(robot_img=cv2.imread("maze_images/raw_robot2.png"), maze_im
 	else:
 		angle = 180 - 180 / math.pi * math.atan(dy/dx)
 
-	min_x = np.min(dst[0])
-	min_y = np.min(dst[1])
-	max_x = np.max(dst[0])
-	max_y = np.max(dst[1])
+	min_x = np.min(dst[0]).astype(int)
+	min_y = np.min(dst[1]).astype(int)
+	max_x = np.max(dst[0]).astype(int)
+	max_y = np.max(dst[1]).astype(int)
 	top_left = (min_x, min_y)
 	bottom_right = (max_x, max_y)
 	return top_left, bottom_right, clip_to_range(angle)
