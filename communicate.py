@@ -1,6 +1,7 @@
 import cv2
 # import bluetooth
 from process_maze_image import generate_navigation_directions_from_image, send_path_on_bluetooth, find_path_for_robot_from_image_and_directions
+# from camera import take_picture
 
 robot_image = cv2.imread("maze_images/raw_robot2.png")
 
