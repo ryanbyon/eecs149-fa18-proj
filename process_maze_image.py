@@ -23,14 +23,17 @@ image = cv2.imread(args["image"])
 robot = cv2.imread(args["robot"]) # It's facing left
 
 # Threshold values for maze corner detection (green)
-lower =	np.array([130, 50, 70], dtype="uint8")
+lower =	np.array([130, 50, 50], dtype="uint8")
 upper = np.array([200, 90, 120], dtype = "uint8")
 
 # Desired resolution of projected image
 # 91.3, 123.6 is REAL LIFE CM measurement
+real_width, real_height = 687, 461 # Sixteenths of inches!!
+SIXTEENTH_INCH_TO_CM = 2.54 / 16
+DESIRED_PIXELS_PER_CM = 8
 width, height = 130 * 6, 91 * 6
 width, height = 1236, 913
-width, height = 687, 461 # Sixteenths of inches!!
+width, height = round(SIXTEENTH_INCH_TO_CM * DESIRED_PIXELS_PER_CM * real_width), round(SIXTEENTH_INCH_TO_CM * DESIRED_PIXELS_PER_CM * real_height)
 
 # Desired resolution of maze grid
 grid_width, grid_height = width // 13, height // 13
@@ -102,11 +105,13 @@ def generate_navigation_directions_from_image(maze_image, robot_image):
 	print("Projecion and corner detection: " + str(end_project_time - start_project_time))
 	print("Robot finding: " + str(end_findrobot_time - start_findrobot_time))
 	print("BFS to find distances from walls, distances from every square, directions from every square: " + str(end_bfs_time - start_bfs_time))
+	
+	visualized_maze_grid = overlay_visualize(padded, bools_buffered.astype("uint8"))
+	cv2.imwrite("projected_walls_grid_final.png", visualized_maze_grid)
 	return directions_smart
 
-	# visualized_maze_grid = overlay_visualize(padded, bools_buffered.astype("uint8"))
 	# cv2.imwrite("wall_distances_2.png", distances_from_walls * 28)
-	# cv2.imwrite("projected_walls_grid_final.png", visualized_maze_grid)
+	
 	# cv2.imwrite("distances2.png", distances)
 	# cv2.imwrite("magic2.png", directions_smart)
 

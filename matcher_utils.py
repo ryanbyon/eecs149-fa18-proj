@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import math
+from matplotlib import pyplot as plt
 
 MIN_MATCH_COUNT = 10
 
@@ -34,22 +35,34 @@ def find_robot_angle(robot_img=cv2.imread("maze_images/raw_robot2.png"), maze_im
 	dst_pts = np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
 
 	M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0)
+	
 	matchesMask = mask.ravel().tolist()
 
+	filtered_good = [good[i] for i in range(len(good)) if matchesMask[i]]
+	sorted_good = sorted(good, key=lambda match: match.distance)
+	first_match, second_match = sorted_good[2], sorted_good[1]
+
+	a1, a2 = kp1[first_match.queryIdx].pt, kp2[first_match.trainIdx].pt
+	b1, b2 = kp1[second_match.queryIdx].pt, kp2[second_match.trainIdx].pt
+
+	print(a1, a2)
+	print(b1, b2)
+	angle_diff = get_angle(a1, a2, b1, b2)
+	print(angle_diff, flush=True)
 
 	h,w = img1.shape
 	pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
 	dst = cv2.perspectiveTransform(pts,M)
 
-	# img2 = cv2.polylines(img2,[np.int32(dst)],True,255,3, cv2.LINE_AA)
-	# draw_params = dict(matchColor = (0,255,0), # draw matches in green color
- #                   singlePointColor = None,
- #                   matchesMask = matchesMask, # draw only inliers
- #                   flags = 2)
+	#img2 = cv2.polylines(img2,[np.int32(dst)],True,255,3, cv2.LINE_AA)
+	draw_params = dict(matchColor = (0,255,0), # draw matches in green color
+                   singlePointColor = None,
+                   matchesMask = matchesMask, # draw only inliers
+                   flags = 2)
 
-	# img3 = cv2.drawMatches(img1,kp1,img2,kp2,good,None,**draw_params)
+	img3 = cv2.drawMatches(img1,kp1,img2,kp2,good,None,**draw_params)
 
-	# plt.imshow(img3, 'gray'),plt.show()
+	plt.imshow(img3, 'gray'),plt.show()
 
 	# Transformed upper left, transformed upper right.
 	p2, q2 = dst[0][0], dst[3][0]
@@ -78,3 +91,20 @@ def clip_to_range(angle):
 		return 360 + angle
 	else:
 		return -360 + angle
+
+# Angle to rotate first pair of points (a1, b1) to second pair (a2, b2) 
+def get_angle(a1, a2, b1, b2):
+	dy1, dx1 = b1[1] - a1[1], b1[0] - a1[0]
+	dy2, dx2 = b2[1] - a2[1], b2[0] - a2[0]
+
+	if dx1 > 0:
+		angle1 = -1 * 180 / math.pi * math.atan(dy1/dx1)
+	else:
+		angle1 = 180 - 180 / math.pi * math.atan(dy1/dx1)
+	angle1 = clip_to_range(angle1)
+	if dx2 > 0:
+		angle2 = -1 * 180 / math.pi * math.atan(dy2/dx2)
+	else:
+		angle2 = 180 - 180 / math.pi * math.atan(dy2/dx2)
+	angle2 = clip_to_range(angle2)
+	return clip_to_range(angle2 - angle1)

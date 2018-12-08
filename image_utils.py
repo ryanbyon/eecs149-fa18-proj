@@ -11,7 +11,7 @@ WALL_THRESHOLD_DOWNSIZING = 40 # When downsizing the maze image to generate maze
 WALL_THRESHOLD_UPSIZING = 0 # When upsizing, maze walls should already be 255 or 0
 
 # Wall color thresholds
-wall_lower_bgr = np.asarray([30, 20, 160])
+wall_lower_bgr = np.asarray([30, 20, 140])
 wall_upper_bgr = np.asarray([120, 90, 255])
 
 wall_color = [75, 55, 190]
