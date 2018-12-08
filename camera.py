@@ -5,7 +5,7 @@ camera = picamera.PiCamera()
 
 def take_picture(save_to_path='maze_images/current_maze.jpg'):
 	camera.start_preview()
-	sleep(10)
+	x = input()
 	camera.capture(save_to_path)
 	camera.stop_preview()
 	
