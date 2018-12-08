@@ -138,7 +138,7 @@ float getLinearVelocity() {
 }
 
 float getAngularVelocity() {
-  return (abs(velocity_right) - velocity_left) / WHEELBASE_DIAMETER;
+  return ((velocity_right)*(-1) - velocity_left) / WHEELBASE_DIAMETER;
 }
 
 unsigned long checkEncodersZeroVelocity(void) {

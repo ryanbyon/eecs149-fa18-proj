@@ -61,10 +61,10 @@ void loop() {
   if (Serial.available()) {
       input = Serial.parseInt();
       if (input == 0) {
-          dist = 0;
-          angle = 0;
-          count = 0;   
-          flag = true;
+//          dist = 0;
+//          angle = 0;
+//          count = 0;   
+//          flag = true;
           target= 0;
           target_dist = 0;
           Serial.println("input = 0");
@@ -76,19 +76,19 @@ void loop() {
         if (recv) {
           target_dist = 0;
           target = input;
-          dist = 0;
-          angle = 0;
-          count = 0;   
-          flag = true;
+//          dist = 0;
+//          angle = 0;
+//          count = 0;   
+//          flag = true;
           Serial.print("set degree: ");
           Serial.println(target);
         } else {
           target_dist = input;
           target = 0;
-          dist = 0;
-          angle = 0;
-          count = 0;   
-          flag = true;
+//          dist = 0;
+//          angle = 0;
+//          count = 0;   
+//          flag = true;
           Serial.print("set distance: ");
           Serial.println(target_dist);
         }
@@ -164,13 +164,7 @@ void loop() {
           // Print debug info every 500 loops
           if (count % 50 == 0) {
             curr_time = micros();
-      //      Serial.print("time: ");
-      //      Serial.println(curr_time - prev_time);
             dist = dist + (velocity_linear / 100.0)*((float)(curr_time - prev_time)/1000000.0);
-      //      Serial.print("distance: ");
-      //      Serial.println(dist);
-      //       Serial.print("target: ");
-      //      Serial.println(target);
             prev_time = curr_time;
           }
       count++;
@@ -184,12 +178,12 @@ void loop() {
   
     target= 0;
     target_dist = 0;
-//  if (end_time != 0 && flag) {
-////    Serial.print("Time interval: ");
-//    Serial.print((end_time - start_time));
-//    Serial.print("\n");
-//    flag = false;
-//  }
+  if (end_time != 0 && flag) {
+//    Serial.print("Time interval: ");
+    Serial.print((end_time - start_time));
+    Serial.print("\n");
+    flag = false;
+  }
     while (Serial.available()) {
       Serial.read();
       Serial.flush();
