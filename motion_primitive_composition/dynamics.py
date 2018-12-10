@@ -138,12 +138,12 @@ class RotatingDubinsModel(Dynamics):
             # linear_translation = v * sympy.sin(omega * dt) / omega + sympy.cos(omega * dt)
             # perp_translation = v * (1 - sympy.cos(omega * dt)) / omega + sympy.sin(
             #     omega * dt)  # perpendicular (to the left of main linear path)
-            linear_translation = v * sympy.sin(omega * dt)
+            linear_translation = v * sympy.sin(omega * dt) / omega
             perp_translation = v * (1 - sympy.cos(omega * dt)) / omega
             return sympy.Matrix(
                 [(x + linear_translation * sympy.cos(theta) - perp_translation * sympy.sin(theta),
                   y + linear_translation * sympy.sin(theta) + perp_translation * sympy.cos(theta),
-                  omega * dt)])
+                  theta + omega * dt)])
             # return x + v * sympy.cos(theta) * dt, y + v * sympy.sin(theta) * dt, theta + omega * dt
 
         dynamics_equation = dynamics(x, y, theta, v, omega, dt)
@@ -154,7 +154,7 @@ class RotatingDubinsModel(Dynamics):
 if __name__ == '__main__':
     db = RotatingDubinsModel()
     x, y, theta, v, omega, dt = db.variables
-    predictedInputs = {x: 0, y: 0, theta: 0, v: 28.83451398, omega: 0.1500567293, dt: 5}
+    predictedInputs = {x: 0, y: 0, theta: 0, v: 28.83451398, omega: 0.1500567293, dt: 1.6}
     errors = {x: 0, y: 0, theta: 0, v: 1.334704641, omega: 0.02230989018, dt: 0}
 
     import time
