@@ -2,6 +2,7 @@
 import collections
 import numpy as np
 from enum import Enum
+from matcher_utils import clip_to_range
 
 class Direction(Enum):
 	NOWHERE = 0
@@ -22,22 +23,29 @@ class Direction(Enum):
 		else:
 			return Direction.NOWHERE
 
-	# What direction to turn to face other from self
-	def turn_calculation(self, other):
-		if self == other:
-			return Turn.DONT_TURN
-		elif abs(other.value - self.value) == 126:
-			return Turn.TURN_180
-		elif other.value - self.value == 63 or self == Direction.DOWN and other == Direction.LEFT:
-			return Turn.RIGHT_TURN
-		else:
-			return Turn.LEFT_TURN
+	# What angle (in degrees) to turn to face self from initial
+	# Initial should be in [-180, 180]
+	def turn_calculation(self, initial_angle_from_LEFT):
+		angle_to_face_LEFT = -initial_angle_from_LEFT
+		if self == Direction.LEFT:
+			return angle_to_face_LEFT
+		elif self == Direction.UP:
+			return clip_to_range(-90 + angle_to_face_LEFT)
+		elif self == Direction.RIGHT:
+			return clip_to_range(180 + angle_to_face_LEFT)
+		elif self == Direction.DOWN:
+			return clip_to_range(90 + angle_to_face_LEFT)
 
-class Turn(Enum):
-	LEFT_TURN = 0
-	RIGHT_TURN = 1
-	TURN_180 = 2
-	DONT_TURN = 3
+	# What angle from LEFT is this direction?
+	def angle_from_LEFT(self):
+		if self == Direction.LEFT:
+			return 0
+		elif self == Direction.UP:
+			return -90
+		elif self == Direction.RIGHT:
+			return 180
+		elif self == Direction.DOWN:
+			return 90
 
 # Returns the valid neighboring grid squares
 # paired with the DIRECTION to RETURN to the first square
@@ -102,7 +110,7 @@ def create_direction_matrix(grid, distances, wall_distances):
 				result[i][j] = best_direction[1].opposite().value
 	return result
 
-def find_path(source, directions, initial_direction):
+def find_path(source, directions, initial_angle):
 	path = []
 	curr = source
 	# while we're not inside a wall or at the destination pointed to by directions
@@ -118,31 +126,31 @@ def find_path(source, directions, initial_direction):
 		elif direction == Direction.DOWN.value:
 			curr = (curr[0]+1, curr[1])
 
-	return process_path(path, initial_direction)
+	return process_path(path, initial_angle)
 
 # Input: [255, 255, 191]
 # Output: [DONT_TURN, 2, TURN_LEFT, 1]
-def process_path(path, initial_direction):
+def process_path(path, initial_angle):
 	result = []
-	if initial_direction == Direction(path[0][0]):
-		result.append(Turn.DONT_TURN)
-	curr_length = 1
-	curr_dir = initial_direction
-	for direction, square in path:
-		direction = Direction(direction)
-		if curr_dir == direction:
-			curr_length += 1
+	index, prev_dir = 0, Direction(path[0][0])
+	result.append(prev_dir.turn_calculation(initial_angle))
+	curr_runlength = 0
+	while index < len(path):
+		curr_dir = Direction(path[index][0])
+		if curr_dir == prev_dir:
+			curr_runlength += 1
 		else:
-			result.append(curr_length)
-			result.append(curr_dir.turn_calculation(direction))
-			curr_dir = direction
-			curr_length = 1
-
+			result.append(curr_runlength)
+			curr_runlength = 1
+			result.append(curr_dir.turn_calculation(prev_dir.angle_from_LEFT()))
+			prev_dir = curr_dir
+		index += 1
+	result.append(curr_runlength)
 	return result
 
 def print_path(path):
 	index = 0
 	while (index < len(path)):
-		print(Turn(path[index]), path[index + 1])
-		print()
+		print("Turn " + str(path[index]) + " degrees.")
+		print("Go forward " + str(path[index + 1]) + " squares.")
 		index += 2

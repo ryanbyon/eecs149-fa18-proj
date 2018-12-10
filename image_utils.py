@@ -7,9 +7,14 @@ from projection import projection
 from math import ceil
 
 # MAGIC NUMBERS
-WALL_THRESHOLD_DOWNSIZING = 77 # When downsizing the maze image to generate maze grid
+WALL_THRESHOLD_DOWNSIZING = 40 # When downsizing the maze image to generate maze grid
 WALL_THRESHOLD_UPSIZING = 0 # When upsizing, maze walls should already be 255 or 0
 
+# Wall color thresholds
+wall_lower_bgr = np.asarray([30, 20, 140])
+wall_upper_bgr = np.asarray([120, 90, 255])
+
+wall_color = [75, 55, 190]
 RED = [0, 0, 255]
 
 # Takes a raw image of the maze and outputs the pixel coordinates (row,col) of its four corners
@@ -29,13 +34,29 @@ def detect_corners(image, corner_lower_bgr, corner_upper_bgr):
 	sum_centers = np.sum(kmeans.cluster_centers_, axis=1)
 	sorted_indices = sum_centers.argsort()
 	sorted_centers = np.take(kmeans.cluster_centers_, sorted_indices, axis=0)
+	
 	if sorted_centers[1][0] < sorted_centers[2][0]:
 		sorted_centers[1], sorted_centers[2] = sorted_centers[2], sorted_centers[1]
-		sorted_centers[2], sorted_centers[3] = sorted_centers[3], sorted_centers[2]
+		sorted_indices[1], sorted_indices[2] = sorted_indices[2], sorted_indices[1]
 
 	for i in sorted_centers:
 		i[0], i[1] = i[1], i[0]
-	return sorted_centers
+
+	# Want min_x, min_y
+	group0 = green_corners[np.where(kmeans.labels_ == sorted_indices[0])].T
+	# Want min_x, max_y
+	group1 = green_corners[np.where(kmeans.labels_ == sorted_indices[1])].T
+	# Want max_x, min_y
+	group2 = green_corners[np.where(kmeans.labels_ == sorted_indices[2])].T
+	# Want max_x, max_y	
+	group3 = green_corners[np.where(kmeans.labels_ == sorted_indices[3])].T
+
+	result = np.zeros(shape=(4, 2))
+	result[0] = np.asarray([np.min(group0[1]), np.min(group0[0])])
+	result[1] = np.asarray([np.min(group1[1]), np.max(group1[0])])
+	result[2] = np.asarray([np.max(group2[1]), np.min(group2[0])])
+	result[3] = np.asarray([np.max(group3[1]), np.max(group3[0])])
+	return result.astype(np.float32)
 
 # Takes a projected image of the maze and outputs a downscaled image whose pixel values are 
 # either [255, 255, 255] (white=wall is present) or [0, 0 0] (black=wall not present).
@@ -65,11 +86,14 @@ def gridify(projected, grid_width, grid_height, wall_threshold):
 # wall_threshold: threshold for detecting walls in the projected image
 def gridify2(projected, downscale_factor, wall_threshold, robot_top_left, robot_bottom_right):
 	BLACK = 0
-	projected = cv2.cvtColor(projected, cv2.COLOR_BGR2GRAY)
-	threshed = cv2.threshold(projected, wall_threshold, 255, cv2.THRESH_BINARY)[1]
+	#projected = cv2.cvtColor(projected, cv2.COLOR_BGR2GRAY)
+	#threshed = cv2.threshold(projected, wall_threshold, 255, cv2.THRESH_BINARY)[1]
+
+	threshed = cv2.inRange(projected, wall_lower_bgr, wall_upper_bgr)
+	# cv2.imwrite("temp.png", threshed)
 	threshed[robot_top_left[1]:robot_bottom_right[1], robot_top_left[0]:robot_bottom_right[0]] = BLACK
 
-	grid_height, grid_width = projected.shape
+	grid_height, grid_width = projected.shape[:2]
 	downsized = cv2.resize(threshed, dsize = (grid_width//downscale_factor, grid_height//downscale_factor), interpolation=cv2.INTER_AREA)
 
 	threshed_downsized = cv2.threshold(downsized, WALL_THRESHOLD_DOWNSIZING, 255, cv2.THRESH_BINARY)[1]
@@ -88,7 +112,7 @@ def pad_walls(projected, desired_downscale_factor):
 	top, left = height_diff // 2, width_diff // 2
 	bottom, right = height_diff - top, width_diff - left
 
-	return cv2.copyMakeBorder(projected, top, bottom, left, right, cv2.BORDER_CONSTANT, value=WHITE)
+	return cv2.copyMakeBorder(projected, top, bottom, left, right, cv2.BORDER_CONSTANT, value=wall_color)
 
 # Overlays a downscaled grid onto a projected image of the maze.
 #
