@@ -44,8 +44,8 @@ class Dynamics:
         self._dynamics = dynamics
 
     def calculateErrorMargins(self, predictedInputs: Dict[sympy.Symbol, float], errors: Dict[sympy.Symbol, float],
-                              display: bool = True):
-        print("Calculating error margins")
+                              display: bool = True, log = print):
+        log("Calculating error margins")
         assert all(symbol in self._constants or symbol in self._variables for symbol in predictedInputs)
         assert all(symbol in self._constants or symbol in self._variables for symbol in errors)
 
@@ -56,11 +56,11 @@ class Dynamics:
 
         allVariables = {**self._constants, **predictedInputs}
         if display:
-            print("All variables:", allVariables)
+            log("All variables:", allVariables)
         # predictedOutput = self._dynamics.subs(allVariables)
         # print('Normal predicted output: ', predictedOutput)
 
-        print("Evaluating errors:")
+        log("Evaluating errors:")
         outputsForDifferentErrors = []
         relevantErrorVariables = {symb: error for symb, error in errors.items() if symb in predictedInputs}
         importantErrorVariables = {symb: error for symb, error in relevantErrorVariables.items() if error != 0}
@@ -77,7 +77,7 @@ class Dynamics:
                 calculatedValue = [float(x) for x in self._dynamics.subs(newValues).n()]
 
                 if display:
-                    print('Value with negative errors at', modifiedErrorVariables, ':', calculatedValue)
+                    log('Value with negative errors at', modifiedErrorVariables, ':', calculatedValue)
                 outputsForDifferentErrors.append(calculatedValue)
 
                 # Calculate the error if modifiedErrorVariables had zero error instead
@@ -90,26 +90,26 @@ class Dynamics:
                 calculatedValue = [float(x) for x in self._dynamics.subs(newValues).n()]
 
                 if display:
-                    print('Value with zero errors at', modifiedErrorVariables, ':', calculatedValue)
+                    log('Value with zero errors at', modifiedErrorVariables, ':', calculatedValue)
                 outputsForDifferentErrors.append(calculatedValue)
 
         boundingBox = [(min(lst), max(lst)) for lst in list(zip(*outputsForDifferentErrors))]
         if display:
-            print('Bounding box:', boundingBox)
-        print('Returning bounding box')
+            log('Bounding box:', boundingBox)
+            log('Returning bounding box')
         return boundingBox
 
     def calculateSequenceOfErrorMargins(self, predictedInputs: List[Dict[sympy.Symbol, float]],
                                         errors: List[Dict[sympy.Symbol, float]],
-                                        outputSymbolMapping: List[sympy.Symbol], display: bool = True):
+                                        outputSymbolMapping: List[sympy.Symbol], display: bool = True, log = print):
         updatedPredictedInput = {}
         updatedError = {}
         outputBoundingBoxes = []
         for initialPredictedInput, initialError in zip(predictedInputs, errors):
             predictedInput = {**initialPredictedInput, **updatedPredictedInput}
             error = {**initialError, **updatedError}
-            print(predictedInput)
-            print(error)
+            log(predictedInput)
+            log(error)
             outputBoundingBox = self.calculateErrorMargins(predictedInput, error, display)
             outputBoundingBoxes.append(outputBoundingBox)
 
@@ -155,7 +155,7 @@ if __name__ == '__main__':
     db = RotatingDubinsModel()
     x, y, theta, v, omega, dt = db.variables
     predictedInputs = {x: 0, y: 0, theta: 0, v: 28.83451398, omega: 0.1500567293, dt: 1.6}
-    errors = {x: 0, y: 0, theta: 0, v: 1.334704641, omega: 0.02230989018, dt: 0}
+    errors = {x: 0, y: 0, theta: 0, v: 2 * 1.334704641, omega: 2 * 0.02230989018, dt: 0}
 
     import time
 

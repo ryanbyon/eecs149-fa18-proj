@@ -5,8 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="442d9850-a010-4a5a-960e-5429c858d066" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/motion_primitive_composition/dynamics.py" beforeDir="false" afterPath="$PROJECT_DIR$/motion_primitive_composition/dynamics.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/motion_primitive_composition/error_visualization.py" beforeDir="false" afterPath="$PROJECT_DIR$/motion_primitive_composition/error_visualization.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/motion_primitive_composition/motion_composition.py" beforeDir="false" afterPath="$PROJECT_DIR$/motion_primitive_composition/motion_composition.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -38,26 +39,27 @@
         <counts>
           <entry key="Python Console" value="900" />
           <entry key="dummy" value="60" />
-          <entry key="py" value="13554" />
+          <entry key="py" value="14994" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
           <entry key="PLAIN_TEXT" value="60" />
-          <entry key="Python" value="14454" />
+          <entry key="Python" value="15894" />
         </counts>
       </usages-collector>
     </session>
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/motion_primitive_composition/motion_composition.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="543">
-              <caret line="63" selection-start-line="63" selection-end-line="63" />
+            <state relative-caret-position="-64">
+              <caret line="82" column="116" lean-forward="true" selection-start-line="82" selection-start-column="116" selection-end-line="82" selection-end-column="116" />
               <folding>
-                <element signature="e#101#111#0" expanded="true" />
+                <element signature="e#101#115#0" expanded="true" />
+                <marker date="1544404916448" expanded="true" signature="571:951" ph="..." />
               </folding>
             </state>
           </provider>
@@ -66,33 +68,33 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/motion_primitive_composition/error_visualization.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="254">
-              <caret line="188" column="25" selection-start-line="137" selection-start-column="4" selection-end-line="188" selection-end-column="25" />
+            <state relative-caret-position="242">
+              <caret line="80" column="76" selection-start-line="80" selection-start-column="76" selection-end-line="80" selection-end-column="76" />
               <folding>
                 <element signature="e#220#230#0" expanded="true" />
-                <marker date="1544398613621" expanded="true" signature="374:5064" ph="..." />
-                <marker date="1544398613621" expanded="true" signature="1560:1569" ph="..." />
-                <marker date="1544398613621" expanded="true" signature="2222:2228" ph="..." />
-                <marker date="1544398613621" expanded="true" signature="2495:2607" ph="..." />
-                <marker date="1544398613621" expanded="true" signature="3168:3212" ph="..." />
-                <marker date="1544398613621" expanded="true" signature="3300:4067" ph="..." />
-                <marker date="1544398613621" expanded="true" signature="4646:4651" ph="..." />
+                <marker date="1544404779059" expanded="true" signature="374:5499" ph="..." />
+                <marker date="1544404779059" expanded="true" signature="1560:1569" ph="..." />
+                <marker date="1544404779059" expanded="true" signature="2222:2228" ph="..." />
+                <marker date="1544404779059" expanded="true" signature="2495:2607" ph="..." />
+                <marker date="1544404779059" expanded="true" signature="3600:3645" ph="..." />
+                <marker date="1544404779059" expanded="true" signature="3734:4501" ph="..." />
+                <marker date="1544404779059" expanded="true" signature="5081:5086" ph="..." />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/motion_primitive_composition/dynamics.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="186">
-              <caret line="147" lean-forward="true" selection-start-line="147" selection-end-line="147" />
+            <state relative-caret-position="120">
+              <caret line="58" selection-start-line="58" selection-end-line="58" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
-                <marker date="1544402904790" expanded="true" signature="5378:6084" ph="..." />
-                <marker date="1544402904790" expanded="true" signature="6188:7458" ph="..." />
-                <marker date="1544402904790" expanded="true" signature="6552:6565" ph="..." />
-                <marker date="1544402904790" expanded="true" signature="6950:7234" ph="..." />
+                <marker date="1544403400169" expanded="true" signature="5394:6096" ph="..." />
+                <marker date="1544403400169" expanded="true" signature="6200:7470" ph="..." />
+                <marker date="1544403400169" expanded="true" signature="6564:6577" ph="..." />
+                <marker date="1544403400169" expanded="true" signature="6962:7246" ph="..." />
               </folding>
             </state>
           </provider>
@@ -110,8 +112,9 @@
         <option value="$PROJECT_DIR$/motion_composition/error_visualization.py" />
         <option value="$PROJECT_DIR$/motion_composition/dynamics.py" />
         <option value="$PROJECT_DIR$/motion_composition/motion_composition.py" />
-        <option value="$PROJECT_DIR$/motion_primitive_composition/motion_composition.py" />
         <option value="$PROJECT_DIR$/motion_primitive_composition/dynamics.py" />
+        <option value="$PROJECT_DIR$/motion_primitive_composition/error_visualization.py" />
+        <option value="$PROJECT_DIR$/motion_primitive_composition/motion_composition.py" />
       </list>
     </option>
   </component>
@@ -162,7 +165,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.dynamics (1)">
+  <component name="RunManager" selected="Python.motion_composition (1)">
     <configuration name="dynamics (1)" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="eecs149-fa18-proj" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -277,8 +280,8 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.dynamics (1)" />
         <item itemvalue="Python.motion_composition (1)" />
+        <item itemvalue="Python.dynamics (1)" />
         <item itemvalue="Python.motion_composition" />
         <item itemvalue="Python.dynamics" />
         <item itemvalue="Python.error_visualization" />
@@ -333,43 +336,44 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/motion_primitive_composition/dynamics.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="58" selection-start-line="58" selection-end-line="58" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+            <marker date="1544403400169" expanded="true" signature="5394:6096" ph="..." />
+            <marker date="1544403400169" expanded="true" signature="6200:7470" ph="..." />
+            <marker date="1544403400169" expanded="true" signature="6564:6577" ph="..." />
+            <marker date="1544403400169" expanded="true" signature="6962:7246" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/motion_primitive_composition/error_visualization.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="254">
-          <caret line="188" column="25" selection-start-line="137" selection-start-column="4" selection-end-line="188" selection-end-column="25" />
+        <state relative-caret-position="242">
+          <caret line="80" column="76" selection-start-line="80" selection-start-column="76" selection-end-line="80" selection-end-column="76" />
           <folding>
             <element signature="e#220#230#0" expanded="true" />
-            <marker date="1544398613621" expanded="true" signature="374:5064" ph="..." />
-            <marker date="1544398613621" expanded="true" signature="1560:1569" ph="..." />
-            <marker date="1544398613621" expanded="true" signature="2222:2228" ph="..." />
-            <marker date="1544398613621" expanded="true" signature="2495:2607" ph="..." />
-            <marker date="1544398613621" expanded="true" signature="3168:3212" ph="..." />
-            <marker date="1544398613621" expanded="true" signature="3300:4067" ph="..." />
-            <marker date="1544398613621" expanded="true" signature="4646:4651" ph="..." />
+            <marker date="1544404779059" expanded="true" signature="374:5499" ph="..." />
+            <marker date="1544404779059" expanded="true" signature="1560:1569" ph="..." />
+            <marker date="1544404779059" expanded="true" signature="2222:2228" ph="..." />
+            <marker date="1544404779059" expanded="true" signature="2495:2607" ph="..." />
+            <marker date="1544404779059" expanded="true" signature="3600:3645" ph="..." />
+            <marker date="1544404779059" expanded="true" signature="3734:4501" ph="..." />
+            <marker date="1544404779059" expanded="true" signature="5081:5086" ph="..." />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/motion_primitive_composition/motion_composition.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="543">
-          <caret line="63" selection-start-line="63" selection-end-line="63" />
+        <state relative-caret-position="-64">
+          <caret line="82" column="116" lean-forward="true" selection-start-line="82" selection-start-column="116" selection-end-line="82" selection-end-column="116" />
           <folding>
-            <element signature="e#101#111#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/motion_primitive_composition/dynamics.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="186">
-          <caret line="147" lean-forward="true" selection-start-line="147" selection-end-line="147" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-            <marker date="1544402904790" expanded="true" signature="5378:6084" ph="..." />
-            <marker date="1544402904790" expanded="true" signature="6188:7458" ph="..." />
-            <marker date="1544402904790" expanded="true" signature="6552:6565" ph="..." />
-            <marker date="1544402904790" expanded="true" signature="6950:7234" ph="..." />
+            <element signature="e#101#115#0" expanded="true" />
+            <marker date="1544404916448" expanded="true" signature="571:951" ph="..." />
           </folding>
         </state>
       </provider>

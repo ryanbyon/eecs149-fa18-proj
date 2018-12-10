@@ -7,13 +7,25 @@ Motion composition main file
 Author: Ahad Rauf
 """
 
-import sys
+import os, sys
 import numpy as np
+from math import pi
 
 from PyQt5 import QtWidgets
 
+motion_primitive_composition_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(motion_primitive_composition_path)
 from motion_primitive_composition.dynamics import RotatingDubinsModel
 from motion_primitive_composition.error_visualization import ErrorVisualizationWindow
+
+
+def addDubinsBoundingBox(name, window, dubinsBoundingBox, color: str = 'red'):
+    x_min, y_min = window.mapPhysicalCoordinatesInStandardCoordinateFrameToPixels(
+        (dubinsBoundingBox[0][0], dubinsBoundingBox[1][0]))
+    x_max, y_max = window.mapPhysicalCoordinatesInStandardCoordinateFrameToPixels(
+        (dubinsBoundingBox[0][1], dubinsBoundingBox[1][1]))
+    window.addForegroundBox(name, x_min, y_min, x_max - x_min, y_max - y_min, color=color)
+
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
@@ -60,20 +72,30 @@ if __name__ == '__main__':
     carRadius = window.mapPhysicalDimensionsToPixels(CAR_RADIUS_INCHES, axis=0)
 
     startPosition = ((WALL_WIDTH_INCHES + PASSAGE_SPACING_X_INCHES / 2) * INCH_TO_CM,
-                     (3.5 * PASSAGE_SPACING_Y_INCHES + 3 * WALL_WIDTH_INCHES) * INCH_TO_CM)
+                     (0.5 * PASSAGE_SPACING_Y_INCHES + WALL_WIDTH_INCHES) * INCH_TO_CM)
 
-    carCoordinates = window.mapPhysicalCoordinatesToPixels(startPosition)
-    print(carCoordinates)
+    carCoordinates = window.mapPhysicalCoordinatesInStandardCoordinateFrameToPixels(startPosition)
+    window.log('Car coordinates:', carCoordinates)
     window.addForegroundCircle('circ1', *carCoordinates, carRadius)
-    # for i in range(50):
-    #     window.log('hello')
+
+    db = RotatingDubinsModel()
+    x, y, theta, v, omega, dt = db.variables
+    predictedInputs = {x: startPosition[0], y: startPosition[1], theta: pi / 2, v: 28.83451398, omega: 0.1500567293,
+                       dt: 0.3}
+    errors = {x: 0, y: 0, theta: 0, v: 3 * 1.334704641, omega: 3 * 0.02230989018, dt: 0}
+    symbolMapping = [x, y, theta]
+    allPredictedInputs = [predictedInputs] * 3
+    allErrors = [errors] * 3
+    boundingBoxes = db.calculateSequenceOfErrorMargins(allPredictedInputs, allErrors, symbolMapping, False, window.log)
+    for i, boundingBox in enumerate(boundingBoxes):
+        addDubinsBoundingBox('error_margin' + str(i), window, boundingBox)
 
     # Tests
-    print(window.mapPhysicalDimensionsToPixels(physicalSpace[0], axis=0),
-          window.mapPhysicalDimensionsToPixels(physicalSpace[1], axis=1))
-    print(wallSizeX, wallSizeY)
-    print(passageSizeX, passageSizeY)
-    print(NUM_PASSAGES_X * passageSizeX + (NUM_PASSAGES_X + 1) * wallSizeX)
-    print(NUM_PASSAGES_Y * passageSizeY + (NUM_PASSAGES_Y + 1) * wallSizeY)
+    # print(window.mapPhysicalDimensionsToPixels(physicalSpace[0], axis=0),
+    #       window.mapPhysicalDimensionsToPixels(physicalSpace[1], axis=1))
+    # print(wallSizeX, wallSizeY)
+    # print(passageSizeX, passageSizeY)
+    # print(NUM_PASSAGES_X * passageSizeX + (NUM_PASSAGES_X + 1) * wallSizeX)
+    # print(NUM_PASSAGES_Y * passageSizeY + (NUM_PASSAGES_Y + 1) * wallSizeY)
 
     sys.exit(app.exec_())

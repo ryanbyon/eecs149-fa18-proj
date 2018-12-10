@@ -75,15 +75,24 @@ class ErrorVisualizationWindow(QtWidgets.QWidget):
         return (self.mapPhysicalDimensionsToPixels(physicalCoordinates[0], axis=0),
                 self.mapPhysicalDimensionsToPixels(physicalCoordinates[1], axis=1))
 
+    def mapPhysicalCoordinatesInStandardCoordinateFrameToPixels(self, physicalCoordinates: Tuple[float, float]) -> \
+    Tuple[float, float]:
+        return (self.mapPhysicalDimensionsToPixels(physicalCoordinates[0], axis=0),
+                self.mapPhysicalDimensionsToPixels(self._physicalSpace[1] - physicalCoordinates[1], axis=1))
+
     def delayGUI(self, delay_ms: int):
         QtTest.QTest.qWait(delay_ms)
 
-    def log(self, text: str):
-        self._logFrame.append('test')
+    def log(self, *text):
+        toWrite = ""
+        for textSnippet in text:
+            toWrite += str(textSnippet) + " "
+        self._logFrame.append(toWrite)
 
     """
     Overriden functions
     """
+
     def paintEvent(self, event: QtGui.QPaintEvent):
         qp = QtGui.QPainter(self)
         # br = QtGui.QBrush(QtGui.QColor('red'))
@@ -107,6 +116,7 @@ class ErrorVisualizationWindow(QtWidgets.QWidget):
     """
     Private functions
     """
+
     def _initializeGraphics(self):
         self._mainLayout = QtWidgets.QHBoxLayout(self)
         # self._mainFrame = QtWidgets.QFrame(self)
@@ -147,7 +157,7 @@ if __name__ == '__main__':
     window = ErrorVisualizationWindow(physicalSpace=physicalSpace, windowSizeWithoutLog=(windowSizeX, windowSizeY))
 
     # Defining dimensions
-    WALL_WIDTH_INCHES = 7/16
+    WALL_WIDTH_INCHES = 7 / 16
     NUM_PASSAGES_X, NUM_PASSAGES_Y = (6, 4)
     PASSAGE_SPACING_X_INCHES = (TOTAL_WIDTH_INCHES - (NUM_PASSAGES_X + 1) * WALL_WIDTH_INCHES) / NUM_PASSAGES_X
     PASSAGE_SPACING_Y_INCHES = (TOTAL_HEIGHT_INCHES - (NUM_PASSAGES_Y + 1) * WALL_WIDTH_INCHES) / NUM_PASSAGES_Y
