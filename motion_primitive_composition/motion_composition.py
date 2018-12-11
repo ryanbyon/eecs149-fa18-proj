@@ -16,7 +16,7 @@ from PyQt5 import QtWidgets
 
 motion_primitive_composition_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(motion_primitive_composition_path)
-from motion_primitive_composition.dynamics import RotatingDubinsModel
+from motion_primitive_composition.differential_dynamics import RotatingDubinsModel
 from motion_primitive_composition.error_visualization import ErrorVisualizationWindow
 
 from typing import List, Dict, Union
