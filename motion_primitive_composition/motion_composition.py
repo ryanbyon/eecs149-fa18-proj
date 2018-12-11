@@ -75,6 +75,7 @@ def execute_motion_composition(carStartPositionFile: str, wallBooleansFile: str,
     :param strategyFile: The file containing the strategy to be executed
     
     :return: The inputs needed be sent to the car as an Nx2 array
+             (every row = [angle to send in radians, distance to move in cm])
     """
     app = QtWidgets.QApplication(sys.argv)
 
@@ -104,8 +105,8 @@ def execute_motion_composition(carStartPositionFile: str, wallBooleansFile: str,
     carRadius = window.mapPhysicalDimensionsToPixels(CAR_RADIUS, axis=0)
 
     startPosition = np.load(motion_primitive_composition_path + '/' + carStartPositionFile)
-
-    carCoordinates = window.mapPhysicalCoordinatesInStandardCoordinateFrameToPixels(startPosition[0:2])
+    carCoordinates = window.mapPhysicalCoordinatesToPixels(
+        startPosition[0:2])  # Start position given in image coordinates
     window.log('Car coordinates:', carCoordinates)
     window.addForegroundCircle('car', *carCoordinates, carRadius)
 
@@ -136,7 +137,7 @@ def execute_motion_composition(carStartPositionFile: str, wallBooleansFile: str,
         nonlocal numActions
         numActions = 0
 
-    def updateActionSequence(name, *actions, color: Union[str, None]='red'):
+    def updateActionSequence(name, *actions, color: Union[str, None] = 'red'):
         print('Action Sequence:', actions)
         allPredictedInputs = []
         allErrors = []
@@ -154,7 +155,7 @@ def execute_motion_composition(carStartPositionFile: str, wallBooleansFile: str,
                 allPredictedInputs.append(inputs)
                 allErrors.append(errorsRotate.copy())
         boundingBoxGenerator = db.calculateSequenceOfErrorMargins(allPredictedInputs, allErrors, symbolMapping, False,
-                                                           window.log)
+                                                                  window.log)
 
         boundingBoxes = []
         colors = ['red', 'green', 'blue',
