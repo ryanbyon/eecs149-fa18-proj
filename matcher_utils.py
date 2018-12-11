@@ -38,31 +38,11 @@ def find_robot_angle(robot_img=cv2.imread("maze_images/raw_robot2.png"), maze_im
 	
 	matchesMask = mask.ravel().tolist()
 
-	filtered_good = [good[i] for i in range(len(good)) if matchesMask[i]]
-	sorted_good = sorted(good, key=lambda match: match.distance)
-	first_match, second_match = sorted_good[2], sorted_good[1]
-
-	a1, a2 = kp1[first_match.queryIdx].pt, kp2[first_match.trainIdx].pt
-	b1, b2 = kp1[second_match.queryIdx].pt, kp2[second_match.trainIdx].pt
-
-	print(a1, a2)
-	print(b1, b2)
-	angle_diff = get_angle(a1, a2, b1, b2)
-	print(angle_diff, flush=True)
-
 	h,w = img1.shape
 	pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
 	dst = cv2.perspectiveTransform(pts,M)
 
-	#img2 = cv2.polylines(img2,[np.int32(dst)],True,255,3, cv2.LINE_AA)
-	draw_params = dict(matchColor = (0,255,0), # draw matches in green color
-                   singlePointColor = None,
-                   matchesMask = matchesMask, # draw only inliers
-                   flags = 2)
-
-	img3 = cv2.drawMatches(img1,kp1,img2,kp2,good,None,**draw_params)
-
-	plt.imshow(img3, 'gray'),plt.show()
+	
 
 	# Transformed upper left, transformed upper right.
 	p2, q2 = dst[0][0], dst[3][0]

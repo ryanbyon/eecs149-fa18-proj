@@ -141,7 +141,7 @@ class ErrorVisualizationWindow(QtWidgets.QWidget):
         self.resize(self._windowSize[0] + self._logWindowWidth, self._windowSize[1])
         self._centerWindow()
         self.setWindowTitle('Error Visualization Window, EE 149 Final Project Fall 2018')
-        self.show()
+        #self.show()
 
     def _centerWindow(self):
         qr = self.frameGeometry()
@@ -154,7 +154,8 @@ if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
 
     # Initialize window
-    TOTAL_WIDTH_INCHES = 42 + 15 / 16
+    # TOTAL_WIDTH_INCHES = 42 + 15 / 16
+    TOTAL_WIDTH_INCHES = 28 + 13 / 16
     TOTAL_HEIGHT_INCHES = 28 + 13 / 16
     INCH_TO_CM = 2.54
     physicalSpace = (TOTAL_WIDTH_INCHES * INCH_TO_CM, TOTAL_HEIGHT_INCHES * INCH_TO_CM)

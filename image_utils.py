@@ -7,14 +7,14 @@ from projection import projection
 from math import ceil
 
 # MAGIC NUMBERS
-WALL_THRESHOLD_DOWNSIZING = 40 # When downsizing the maze image to generate maze grid
+WALL_THRESHOLD_DOWNSIZING = 80 # When downsizing the maze image to generate maze grid
 WALL_THRESHOLD_UPSIZING = 0 # When upsizing, maze walls should already be 255 or 0
 
 # Wall color thresholds
-wall_lower_bgr = np.asarray([30, 20, 140])
-wall_upper_bgr = np.asarray([120, 90, 255])
+wall_lower_bgr = np.asarray([0, 0, 90])
+wall_upper_bgr = np.asarray([55, 55, 180])
 
-wall_color = [75, 55, 190]
+wall_color = [12, 12, 90]
 RED = [0, 0, 255]
 
 # Takes a raw image of the maze and outputs the pixel coordinates (row,col) of its four corners
@@ -24,6 +24,7 @@ RED = [0, 0, 255]
 # corner_upper_bgr: numpy array of upper bounds for corner color
 def detect_corners(image, corner_lower_bgr, corner_upper_bgr):
 	green_mask = cv2.inRange(image, corner_lower_bgr, corner_upper_bgr)
+	cv2.imwrite("YellowMask.png", green_mask)
 	output = cv2.bitwise_and(image, image, mask = green_mask)
 	green_corners = np.asarray(np.where(np.any(output != [0, 0, 0], axis=-1))).T
 
@@ -84,19 +85,27 @@ def gridify(projected, grid_width, grid_height, wall_threshold):
 # projected: projected image
 # downscale_factor: each square(this number) patch of the image becomes 1 grid square
 # wall_threshold: threshold for detecting walls in the projected image
-def gridify2(projected, downscale_factor, wall_threshold, robot_top_left, robot_bottom_right):
+def gridify2(projected, downscale_factor, wall_threshold, robot_top_left=None, robot_bottom_right=None):
 	BLACK = 0
 	#projected = cv2.cvtColor(projected, cv2.COLOR_BGR2GRAY)
 	#threshed = cv2.threshold(projected, wall_threshold, 255, cv2.THRESH_BINARY)[1]
 
 	threshed = cv2.inRange(projected, wall_lower_bgr, wall_upper_bgr)
-	# cv2.imwrite("temp.png", threshed)
-	threshed[robot_top_left[1]:robot_bottom_right[1], robot_top_left[0]:robot_bottom_right[0]] = BLACK
+	cv2.imwrite("temp_walls.png", threshed)
+	h, w = threshed.shape
+	if robot_top_left is not None:
+		robot_y_min = max(0, robot_top_left[1] - 10)
+		robot_y_max = min(h , robot_bottom_right[1] + 10)
+		robot_x_min = max(0, robot_top_left[0] - 10)
+		robot_x_max = min(w , robot_bottom_right[0] + 10)
+		threshed[robot_y_min:robot_y_max, robot_x_min:robot_x_max] = BLACK
 
 	grid_height, grid_width = projected.shape[:2]
 	downsized = cv2.resize(threshed, dsize = (grid_width//downscale_factor, grid_height//downscale_factor), interpolation=cv2.INTER_AREA)
 
 	threshed_downsized = cv2.threshold(downsized, WALL_THRESHOLD_DOWNSIZING, 255, cv2.THRESH_BINARY)[1]
+	cv2.imwrite("temp_walls_2.png", threshed_downsized)
+
 	return threshed_downsized
 
 # Takes the projected image of the maze and outputs this image, padded

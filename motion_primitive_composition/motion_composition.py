@@ -39,6 +39,8 @@ def boundingBoxIntersection(boundingBox, window: ErrorVisualizationWindow, wall_
     R, C = len(wall_booleans), len(wall_booleans[0])
     for i in range(int(xmin_px * C // window.windowSize[0]), int(xmax_px * C // window.windowSize[0] + 1)):
         for j in range(int(ymin_px * R // window.windowSize[1]), int(ymax_px * R // window.windowSize[1] + 1)):
+            if i < 0 or i >= len(wall_booleans) or j < 0 or j >= len(wall_booleans[0]):
+        		    return True
             if wall_booleans[i][j]:
                 return True
     return False
@@ -59,15 +61,16 @@ def addDubinsBoundingBox(name: str, window: ErrorVisualizationWindow, dubinsBoun
         (dubinsBoundingBox[0][0], dubinsBoundingBox[1][0]))
     x_max, y_max = window.mapPhysicalCoordinatesInStandardCoordinateFrameToPixels(
         (dubinsBoundingBox[0][1], dubinsBoundingBox[1][1]))
-    window.addForegroundBox(name, x_min, y_min, x_max - x_min, y_max - y_min, color=color)
+    #window.addForegroundBox(name, x_min, y_min, x_max - x_min, y_max - y_min, color=color)
 
 
 def minimax(a, b):
     return (a, b) if a < b else (b, a)
 
 
-def execute_motion_composition(carStartPositionFile: str, wallBooleansFile: str, strategyFile: str) -> list:
+def execute_motion_composition(startPosition, wall_booleans, actionSequence) -> list:
     """
+    Old inputs: carStartPositionFile: str, wallBooleansFile: str, strategyFile: str
     Note: All file paths should be given relative to the eecs149-fa18-proj folder.
           For example, 'maze_images/wall_booleans.npy' is accepted.
     :param carStartPositionFile: The file containing the car's start position. 
@@ -80,7 +83,8 @@ def execute_motion_composition(carStartPositionFile: str, wallBooleansFile: str,
     app = QtWidgets.QApplication(sys.argv)
 
     # Initialize window
-    TOTAL_WIDTH_INCHES = 42 + 15 / 16
+    # TOTAL_WIDTH_INCHES = 42 + 15 / 16
+    TOTAL_WIDTH_INCHES = 28 + 13 / 16
     TOTAL_HEIGHT_INCHES = 28 + 13 / 16
     INCH_TO_CM = 2.54
     physicalSpace = (TOTAL_WIDTH_INCHES * INCH_TO_CM, TOTAL_HEIGHT_INCHES * INCH_TO_CM)
@@ -89,7 +93,7 @@ def execute_motion_composition(carStartPositionFile: str, wallBooleansFile: str,
     window = ErrorVisualizationWindow(physicalSpace=physicalSpace, windowSizeWithoutLog=(windowSizeX, windowSizeY))
 
     # Define walls
-    wall_booleans = np.load(motion_primitive_composition_path + '/' + wallBooleansFile)
+    # wall_booleans = np.load(motion_primitive_composition_path + '/' + wallBooleansFile)
     GRID_SIZE_Y_INCHES = TOTAL_HEIGHT_INCHES / len(wall_booleans)
     GRID_SIZE_X_INCHES = TOTAL_WIDTH_INCHES / len(wall_booleans[0])
     gridSizeX = window.mapPhysicalDimensionsToPixels(GRID_SIZE_X_INCHES * INCH_TO_CM, axis=0)
@@ -97,23 +101,27 @@ def execute_motion_composition(carStartPositionFile: str, wallBooleansFile: str,
     for i in range(len(wall_booleans)):
         for j in range(len(wall_booleans[0])):
             if wall_booleans[i][j]:
-                window.addBackgroundBox('wall_' + str(i) + ',' + str(j), j * gridSizeX, i * gridSizeY, gridSizeX,
-                                        gridSizeY)
+                pass
+                #window.addBackgroundBox('wall_' + str(i) + ',' + str(j), j * gridSizeX, i * gridSizeY, gridSizeX,
+                #                        gridSizeY)
 
     # Adding in the car
-    CAR_RADIUS = 11 / INCH_TO_CM  # Adjust
+    CAR_RADIUS = 1 / INCH_TO_CM  # Adjust
     carRadius = window.mapPhysicalDimensionsToPixels(CAR_RADIUS, axis=0)
 
-    startPosition = np.load(motion_primitive_composition_path + '/' + carStartPositionFile)
-    carCoordinates = window.mapPhysicalCoordinatesToPixels(
+    # startPosition = np.load(motion_primitive_composition_path + '/' + carStartPositionFile)
+    startPosition[1] = TOTAL_HEIGHT_INCHES * INCH_TO_CM - startPosition[1]
+    
+    carCoordinates = window.mapPhysicalCoordinatesInStandardCoordinateFrameToPixels(
         startPosition[0:2])  # Start position given in image coordinates
-    window.log('Car coordinates:', carCoordinates)
-    window.addForegroundCircle('car', *carCoordinates, carRadius)
+    #window.log('Car coordinates:', carCoordinates)
+    #window.addForegroundCircle('car', *carCoordinates, carRadius)
 
     def removeAllBoundingBoxes(delay_ms=1000):
-        window.delayGUI(delay_ms)
-        window.removeAllForegroundPaintObjects()
-        window.addForegroundCircle('car', *carCoordinates, carRadius)
+        pass
+        #window.delayGUI(delay_ms)
+        #window.removeAllForegroundPaintObjects()
+        #window.addForegroundCircle('car', *carCoordinates, carRadius)
 
     db = RotatingDubinsModel()
     x, y, theta, v, omega, dt = db.variables
@@ -121,11 +129,11 @@ def execute_motion_composition(carStartPositionFile: str, wallBooleansFile: str,
                          omega: 0.1500567293, dt: 0.3}
     errorsMoveForward = {x: 0, y: 0, theta: 0, v: 3 * 1.334704641, omega: 3 * 0.02230989018, dt: 0}
     inputsRotate = {x: startPosition[0], y: startPosition[1], theta: startPosition[2], v: 0.7851747434,
-                    omega: 740.2410825, dt: 0.3}
-    errorsRotate = {x: 0, y: 0, theta: 0, v: 3 * 0.4296893495, omega: 3 * 25.1694945, dt: 0}
+                    omega: 7.48657308, dt: 0.3}
+    errorsRotate = {x: 0, y: 0, theta: 0, v: 3 * 0.4296893495, omega: 3 * 1.07694169, dt: 0}
     symbolMapping = [x, y, theta]
 
-    actionSequence = np.load(motion_primitive_composition_path + '/' + strategyFile)
+    # actionSequence = np.load(motion_primitive_composition_path + '/' + strategyFile)
     allTimes = []
     numActions = 0
 
@@ -167,7 +175,7 @@ def execute_motion_composition(carStartPositionFile: str, wallBooleansFile: str,
                 addDubinsBoundingBox(name + '_' + str(i), window, boundingBox, color=color)
             else:
                 addDubinsBoundingBox(name + '_' + str(i), window, boundingBox, color=colors[i % len(colors)])
-            window.delayGUI(100)
+            #window.delayGUI(100)
             boundingBoxes.append(boundingBox)
 
         lastBoundingBox = boundingBoxes[-1]
@@ -186,25 +194,38 @@ def execute_motion_composition(carStartPositionFile: str, wallBooleansFile: str,
         numActions += 1
         return boundingBoxes
 
-    MAX_DEPTH = 5
-
+    MAX_DEPTH = 3
     def pathPlanning(actionSequence, depth=0) -> list:
         print('Path planning for action sequence:', actionSequence, 'at depth', depth)
-        if depth > MAX_DEPTH:
-            raise ValueError('This algorithm cannot converge within', MAX_DEPTH,
-                             'iterations. Does the car intersect the wall?')
+        #if depth > MAX_DEPTH:
+        #    raise ValueError('This algorithm cannot converge within', MAX_DEPTH,
+        #                     'iterations. Does the car intersect the wall?')
         removeAllBoundingBoxes(delay_ms=1000)
         boundingBoxes = updateActionSequence('first_trial', *actionSequence, color=None)
         for i, boundingBox in enumerate(boundingBoxes):
             intersectsWall = boundingBoxIntersection(boundingBox, window, wall_booleans)
+            print('Movement', i, 'intersects the wall:', intersectsWall)
+            """
             if intersectsWall and i > 0:
                 return actionSequence[:i]  # You can do all moves up until move i without crashing
-            elif intersectsWall and i == 0:
+            elif intersectsWall and i == 0 and depth <= MAX_DEPTH:
                 reinitializeInputs()
                 return pathPlanning(actionSequence[:1] / 2, depth=depth + 1)
+            """
+            if intersectsWall and i > 0 and depth > MAX_DEPTH:
+                return actionSequence[:i]  # You can do all moves up until move i without crashing
+            elif intersectsWall and i > 0 and depth <= MAX_DEPTH:
+                reinitializeInputs()
+                return pathPlanning(list(actionSequence[:i]) + list([actionSequence[i]/2]), depth=depth+1)
+            elif intersectsWall and i == 0 and depth > MAX_DEPTH:
+                raise ValueError('This algorithm cannot converge within', MAX_DEPTH, 'iterations. Does the car intersect the wall?')
+            elif intersectsWall and i == 0 and depth <= MAX_DEPTH:
+                reinitializeInputs()
+                return pathPlanning(actionSequence[:1] / 2, depth=depth + 1)
+            #"""
         return actionSequence  # If none of the bounding boxes intersects the wall, you're set to go!
 
-    plannedActionSequence = actionSequence[1:20]
+    plannedActionSequence = actionSequence[:6]
     print(plannedActionSequence)
     proposedActionSequence = pathPlanning(plannedActionSequence)
     print(proposedActionSequence)
@@ -222,7 +243,7 @@ def execute_motion_composition(carStartPositionFile: str, wallBooleansFile: str,
     print('Theoretical runtime, adding in heuristics for computation time:',
           sum(allTimes) + START_TIME + TIME_PER_COMPUTATION_STEP * (numActions - 1))
 
-    window.delayGUI(delay_ms=4000)
+    #window.delayGUI(delay_ms=4000)
     app.closeAllWindows()
     return proposedActionSequence
 

@@ -3,7 +3,9 @@ import collections
 import numpy as np
 from enum import Enum
 from matcher_utils import clip_to_range
+import math
 
+CM_PER_MOVEMENT = 5
 class Direction(Enum):
 	NOWHERE = 0
 	LEFT = 63
@@ -131,6 +133,9 @@ def find_path(source, directions, initial_angle):
 # Input: [255, 255, 191]
 # Output: [DONT_TURN, 2, TURN_LEFT, 1]
 def process_path(path, initial_angle):
+	if len(path) == 0:
+		print("You're either at the end or stuck in a wall. Good luck either way.")
+		return []
 	result = []
 	index, prev_dir = 0, Direction(path[0][0])
 	result.append(prev_dir.turn_calculation(initial_angle))
@@ -154,3 +159,37 @@ def print_path(path):
 		print("Turn " + str(path[index]) + " degrees.")
 		print("Go forward " + str(path[index + 1]) + " squares.")
 		index += 2
+		
+def condense_and_process_path(path, initial_angle):
+	result = []
+	current_angle = initial_angle
+	index = 0
+	
+	while index < len(path):
+		end_index = min(len(path)-1, index + CM_PER_MOVEMENT)
+		start_dir, start_square = path[index]
+		end_dir, end_square = path[end_index]
+		
+		diff_y = end_square[0] - start_square[0]
+		diff_x = end_square[1] - start_square[1]
+		
+		if diff_x == 0:
+			if diff_y > 0:
+				angle = 90
+			else:
+				angle = -90
+		elif diff_x > 0:
+			angle = 180 - 180 / math.pi * math.atan(diff_y/diff_x)
+		else:
+			angle = -1 * 180 / math.pi * math.atan(diff_y/diff_x)
+			
+		angle = clip_to_range(angle)
+		result.append(get_angle_diff(current_angle, angle))
+		result.append((diff_x * diff_x + diff_y * diff_y) ** 0.5)
+		current_angle = angle
+		index += CM_PER_MOVEMENT
+	return result
+		
+def get_angle_diff(from_angle, to_angle):
+	diff = to_angle - from_angle
+	return clip_to_range(diff)
