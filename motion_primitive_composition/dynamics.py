@@ -79,22 +79,34 @@ class Dynamics:
     def calculateSequenceOfErrorMargins(self, predictedInputs: List[Dict[sympy.Symbol, float]],
                                         errors: List[Dict[sympy.Symbol, float]],
                                         outputSymbolMapping: List[sympy.Symbol], display: bool = True, log=print):
+        """
+        A generator function that calculates a sequence of bounding boxes as you continue to propagate the error forward
+
+        :param predictedInputs:
+        :param errors:
+        :param outputSymbolMapping:
+        :param display:
+        :param log:
+        :return:
+        """
         updatedPredictedInput = {}
         updatedError = {}
-        outputBoundingBoxes = []
+        # outputBoundingBoxes = []
         for initialPredictedInput, initialError in zip(predictedInputs, errors):
             predictedInput = {**initialPredictedInput, **updatedPredictedInput}
             error = {**initialError, **updatedError}
             log(predictedInput)
             log(error)
             outputBoundingBox = self.calculateErrorMargins(predictedInput, error, display)
-            outputBoundingBoxes.append(outputBoundingBox)
+            # outputBoundingBoxes.append(outputBoundingBox)
 
             for symb, bounds in zip(outputSymbolMapping, outputBoundingBox):
                 updatedPredictedInput[symb] = (bounds[0] + bounds[1]) / 2  # Average
                 updatedError[symb] = (bounds[1] - bounds[0]) / 2  # Range / 2
 
-        return outputBoundingBoxes
+            yield outputBoundingBox
+
+        # return outputBoundingBoxes
 
     @property
     def variables(self):
