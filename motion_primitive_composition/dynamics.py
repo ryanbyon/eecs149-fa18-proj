@@ -13,29 +13,6 @@ import itertools
 from typing import List, Union, Dict
 
 
-# class Dynamics:
-#     def __init__(self, variables: List[str], dynamics_models: list):
-#         self._variables = variables
-#         self._dynamics_models = dynamics_models
-#
-#         self._symbols = [sympy.symbols(var) for var in variables]
-#         self._symbolic_dynamics_models = [dynamics_model(*self._symbols) for dynamics_model in dynamics_models]
-#         self._lambda_dynamics_models = [sympy.lambdify(tuple(self._symbols), symbolic_model, "numpy") for
-#                                         symbolic_model in self._symbolic_dynamics_models]
-#
-#     def calculateErrorMargin(self, predictedValues: List[float], errors: List[float]):
-#         outputs = []
-#         for symbolic_model, lambda_model in zip(self._symbolic_dynamics_models, self._lambda_dynamics_models):
-#             outputBoundMax = lambda_model(*predictedValues)
-#             outputBoundMin = outputBoundMax
-#             for symbol, symbol_error in zip(self._symbols, errors):
-#                 dF_dx =  sympy.lambdify(tuple(self._symbols), symbolic_model.diff(symbol), "numpy")
-#                 outputBoundMax += dF_dx(*predictedValues)*symbol_error
-#                 outputBoundMin -= dF_dx(*predictedValues)*symbol_error
-#             outputs.append((outputBoundMin, outputBoundMax))
-#         return outputs
-
-
 class Dynamics:
     def __init__(self, constants: Dict[sympy.Symbol, float], variables: List[sympy.Symbol], dynamics):
         print("Creating dynamics model")
@@ -44,7 +21,7 @@ class Dynamics:
         self._dynamics = dynamics
 
     def calculateErrorMargins(self, predictedInputs: Dict[sympy.Symbol, float], errors: Dict[sympy.Symbol, float],
-                              display: bool = True, log = print):
+                              display: bool = True, log=print):
         log("Calculating error margins")
         assert all(symbol in self._constants or symbol in self._variables for symbol in predictedInputs)
         assert all(symbol in self._constants or symbol in self._variables for symbol in errors)
@@ -101,7 +78,7 @@ class Dynamics:
 
     def calculateSequenceOfErrorMargins(self, predictedInputs: List[Dict[sympy.Symbol, float]],
                                         errors: List[Dict[sympy.Symbol, float]],
-                                        outputSymbolMapping: List[sympy.Symbol], display: bool = True, log = print):
+                                        outputSymbolMapping: List[sympy.Symbol], display: bool = True, log=print):
         updatedPredictedInput = {}
         updatedError = {}
         outputBoundingBoxes = []
@@ -118,7 +95,6 @@ class Dynamics:
                 updatedError[symb] = (bounds[1] - bounds[0]) / 2  # Range / 2
 
         return outputBoundingBoxes
-
 
     @property
     def variables(self):

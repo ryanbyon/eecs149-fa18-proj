@@ -18,6 +18,30 @@ sys.path.append(motion_primitive_composition_path)
 from motion_primitive_composition.dynamics import RotatingDubinsModel
 from motion_primitive_composition.error_visualization import ErrorVisualizationWindow
 
+from typing import List, Dict
+
+
+def boundingBoxIntersection(boundingBox, window: ErrorVisualizationWindow, wall_booleans: List[List[bool]]):
+    xmin_cm, xmax_cm = boundingBox[0]
+    ymin_cm, ymax_cm = boundingBox[1]
+    xmin_px, ymin_px = window.mapPhysicalCoordinatesInStandardCoordinateFrameToPixels((xmin_cm, ymin_cm))
+    xmax_px, ymax_px = window.mapPhysicalCoordinatesInStandardCoordinateFrameToPixels((xmax_cm, ymax_cm))
+    ymin_px, ymax_px = minimax(ymin_px, ymax_px)
+    R, C = len(wall_booleans), len(wall_booleans[0])
+    # print(xmin_px, xmax_px, ymin_px, ymax_px)
+    # print(R, C)
+    # print(window.windowSize)
+    # print(int(xmin_px * C // window.windowSize[0]), int(xmax_px * C // window.windowSize[0] + 1))
+    # print(int(ymin_px * R // window.windowSize[1]), int(ymax_px * R // window.windowSize[1] + 1))
+    # print(wall_booleans)
+    # print(wall_booleans[int(xmin_px * C // window.windowSize[0]):int(xmax_px * C // window.windowSize[0] + 1)][
+    #       int(ymin_px * R // window.windowSize[1]):int(ymax_px * R // window.windowSize[1] + 1)])
+    for i in range(int(xmin_px * C // window.windowSize[0]), int(xmax_px * C // window.windowSize[0] + 1)):
+        for j in range(int(ymin_px * R // window.windowSize[1]), int(ymax_px * R // window.windowSize[1] + 1)):
+            if wall_booleans[i][j]:
+                return True
+    return False
+
 
 def addDubinsBoundingBox(name, window, dubinsBoundingBox, color: str = 'red'):
     x_min, y_min = window.mapPhysicalCoordinatesInStandardCoordinateFrameToPixels(
@@ -27,7 +51,11 @@ def addDubinsBoundingBox(name, window, dubinsBoundingBox, color: str = 'red'):
     window.addForegroundBox(name, x_min, y_min, x_max - x_min, y_max - y_min, color=color)
 
 
-if __name__ == '__main__':
+def minimax(a, b):
+    return (a, b) if a < b else (b, a)
+
+
+def main():
     app = QtWidgets.QApplication(sys.argv)
 
     # Initialize window
@@ -49,46 +77,141 @@ if __name__ == '__main__':
     passageSizeX = window.mapPhysicalDimensionsToPixels(PASSAGE_SPACING_X_INCHES * INCH_TO_CM, axis=0)
     passageSizeY = window.mapPhysicalDimensionsToPixels(PASSAGE_SPACING_Y_INCHES * INCH_TO_CM, axis=1)
 
-    window.addBackgroundBox('wall_left', 0, 0, wallSizeX, windowSizeY)
-    window.addBackgroundBox('wall_top', 0, 0, windowSizeX, wallSizeX)
-    window.addBackgroundBox('wall_right', windowSizeX - wallSizeX, 0, wallSizeX, windowSizeY)
-    window.addBackgroundBox('wall_bottom', 0, windowSizeY - wallSizeY, windowSizeX, wallSizeY)
-    window.addBackgroundBox('wall_left1_top', wallSizeX + passageSizeX, wallSizeY, wallSizeX, wallSizeY + passageSizeY)
-    window.addBackgroundBox('wall_left1_bottom', wallSizeX + passageSizeX, 2 * passageSizeY + 2 * wallSizeY,
-                            wallSizeX, 2 * passageSizeY + 3 * wallSizeY)
-    window.addBackgroundBox('wall_left2_top', 2 * wallSizeX + 2 * passageSizeX, wallSizeY,
-                            wallSizeX, 3 * wallSizeY + 3 * passageSizeY)
-    window.addBackgroundBox('wall_left2_middle', 3 * wallSizeX + 3 * passageSizeX, wallSizeY + passageSizeY,
-                            wallSizeX, 3 * wallSizeY + 2 * passageSizeY)
-    window.addBackgroundBox('wall_right1_bottom', 5 * passageSizeX + 5 * wallSizeX, passageSizeY + wallSizeY,
-                            wallSizeX, 3 * passageSizeY + 4 * wallSizeY)
-    window.addBackgroundBox('wall_right2_top', 3 * passageSizeX + 3 * wallSizeX, passageSizeY + wallSizeY,
-                            2 * passageSizeX + 3 * wallSizeX, wallSizeY)
-    window.addBackgroundBox('wall_right2_bottom', 3 * passageSizeX + 3 * wallSizeX, 3 * passageSizeY + 3 * wallSizeY,
-                            passageSizeX + 2 * wallSizeX, wallSizeY)
+    # Define walls
+    wall_booleans = np.load(motion_primitive_composition_path + '/maze_images/wall_booleans.npy')
+    GRID_SIZE_Y_INCHES = TOTAL_HEIGHT_INCHES / len(wall_booleans)
+    GRID_SIZE_X_INCHES = TOTAL_WIDTH_INCHES / len(wall_booleans[0])
+    gridSizeX = window.mapPhysicalDimensionsToPixels(GRID_SIZE_X_INCHES * INCH_TO_CM, axis=0)
+    gridSizeY = window.mapPhysicalDimensionsToPixels(GRID_SIZE_Y_INCHES * INCH_TO_CM, axis=1)
+    for i in range(len(wall_booleans)):
+        for j in range(len(wall_booleans[0])):
+            if wall_booleans[i][j]:
+                window.addBackgroundBox('wall_' + str(i) + ',' + str(j), j * gridSizeX, i * gridSizeY, gridSizeX,
+                                        gridSizeY)
 
     # Adding in the car
-    CAR_RADIUS_INCHES = PASSAGE_SPACING_X_INCHES / 2  # Adjust
-    carRadius = window.mapPhysicalDimensionsToPixels(CAR_RADIUS_INCHES, axis=0)
+    print(PASSAGE_SPACING_X_INCHES)
+    CAR_RADIUS = 11 / INCH_TO_CM  # Adjust
+    carRadius = window.mapPhysicalDimensionsToPixels(CAR_RADIUS, axis=0)
 
     startPosition = ((WALL_WIDTH_INCHES + PASSAGE_SPACING_X_INCHES / 2) * INCH_TO_CM,
-                     (0.5 * PASSAGE_SPACING_Y_INCHES + WALL_WIDTH_INCHES) * INCH_TO_CM)
+                     (0.5 * PASSAGE_SPACING_Y_INCHES + WALL_WIDTH_INCHES) * INCH_TO_CM,
+                     pi / 2)
 
-    carCoordinates = window.mapPhysicalCoordinatesInStandardCoordinateFrameToPixels(startPosition)
+    carCoordinates = window.mapPhysicalCoordinatesInStandardCoordinateFrameToPixels(startPosition[0:2])
     window.log('Car coordinates:', carCoordinates)
-    window.addForegroundCircle('circ1', *carCoordinates, carRadius)
+    window.addForegroundCircle('car', *carCoordinates, carRadius)
+
+    def removeAllWalls(delay=1000):
+        window.delayGUI(1000)
+        window.removeAllForegroundPaintObjects()
+        window.addForegroundCircle('car', *carCoordinates, carRadius)
 
     db = RotatingDubinsModel()
     x, y, theta, v, omega, dt = db.variables
-    predictedInputs = {x: startPosition[0], y: startPosition[1], theta: pi / 2, v: 28.83451398, omega: 0.1500567293,
-                       dt: 0.3}
-    errors = {x: 0, y: 0, theta: 0, v: 3 * 1.334704641, omega: 3 * 0.02230989018, dt: 0}
+    inputsMoveForward = {x: startPosition[0], y: startPosition[1], theta: startPosition[2], v: 28.83451398,
+                         omega: 0.1500567293, dt: 0.3}
+    errorsMoveForward = {x: 0, y: 0, theta: 0, v: 3 * 1.334704641, omega: 3 * 0.02230989018, dt: 0}
+    inputsRotate = {x: startPosition[0], y: startPosition[1], theta: startPosition[2], v: 0.7851747434,
+                    omega: 740.2410825, dt: 0.3}
+    errorsRotate = {x: 0, y: 0, theta: 0, v: 3 * 0.4296893495, omega: 3 * 25.1694945, dt: 0}
     symbolMapping = [x, y, theta]
-    allPredictedInputs = [predictedInputs] * 3
-    allErrors = [errors] * 3
-    boundingBoxes = db.calculateSequenceOfErrorMargins(allPredictedInputs, allErrors, symbolMapping, False, window.log)
-    for i, boundingBox in enumerate(boundingBoxes):
-        addDubinsBoundingBox('error_margin' + str(i), window, boundingBox)
+
+    def reinitializeInputs():
+        inputsMoveForward[x] = inputsRotate[x] = startPosition[0]
+        inputsMoveForward[y] = inputsRotate[y] = startPosition[1]
+        inputsMoveForward[theta] = inputsRotate[theta] = startPosition[2]
+
+    # actionSequence = [[40, 0], [0, -pi/2], [20, 0]]
+    actionSequence = np.load(motion_primitive_composition_path + '/maze_images/path_array.npy')
+    allTimes = []
+    numActions = 0
+
+    def updateActionSequence(name, *actions, color='red'):
+        print('Action Sequence:', actions)
+        allPredictedInputs = []
+        allErrors = []
+        for action in actions:
+            if action[0] == 0:  # Move forward
+                inputs = inputsMoveForward.copy()
+                inputs[dt] = action[1] / inputs[v]
+                allTimes.append(action[1] / inputs[v])
+                allPredictedInputs.append(inputs)
+                allErrors.append(errorsMoveForward.copy())
+            elif action[1] == 0:  # Rotate
+                inputs = inputsRotate.copy()
+                inputs[dt] = action[0] / inputs[omega]
+                allTimes.append(action[0] / inputs[omega])
+                allPredictedInputs.append(inputs)
+                allErrors.append(errorsRotate.copy())
+        boundingBoxes = db.calculateSequenceOfErrorMargins(allPredictedInputs, allErrors, symbolMapping, False,
+                                                           window.log)
+        for i, boundingBox in enumerate(boundingBoxes):
+            addDubinsBoundingBox(name + '_' + str(i), window, boundingBox, color=color)
+
+        lastBoundingBox = boundingBoxes[-1]
+        newX = (lastBoundingBox[0][0] + lastBoundingBox[0][1]) / 2
+        newY = (lastBoundingBox[1][0] + lastBoundingBox[1][1]) / 2
+        newTheta = (lastBoundingBox[2][0] + lastBoundingBox[2][1]) / 2
+        print('Updating inputs for moving forward:', inputsMoveForward, newX, newY, newTheta)
+        inputsMoveForward[x] = newX
+        inputsMoveForward[y] = newY
+        inputsMoveForward[theta] = newTheta
+        inputsRotate[x] = newX
+        inputsRotate[y] = newY
+        inputsRotate[theta] = newTheta
+        # print(inputsMoveForward)
+        # print(errorsMoveForward)
+        # print(inputsRotate)
+        # print(errorsRotate)
+
+        nonlocal numActions
+        numActions += 1
+        return boundingBoxes
+
+    MAX_DEPTH = 5
+
+    def pathPlanning(actionSequence, depth=0):
+        print('Path planning for action sequence:', actionSequence, 'at depth', depth)
+        if depth > MAX_DEPTH:
+            raise ValueError('This algorithm cannot converge within', MAX_DEPTH,
+                             'iterations. Does the car intersect the wall?')
+        removeAllWalls(1000)
+        boundingBoxes = updateActionSequence('first_trial', *actionSequence, color='red')
+        for i, boundingBox in enumerate(boundingBoxes):
+            intersectsWall = boundingBoxIntersection(boundingBox, window, wall_booleans)
+            if intersectsWall and i > 0:
+                return actionSequence[:i]  # You can do all moves up until move i without crashing
+            elif intersectsWall and i == 0:
+                return pathPlanning(actionSequence[:1] / 2, depth=depth + 1)
+        return actionSequence  # If none of the bounding boxes intersects the wall, you're set to go!
+
+    plannedActionSequence = actionSequence
+    print(plannedActionSequence)
+    proposedActionSequence = pathPlanning(plannedActionSequence)
+    print(proposedActionSequence)
+
+    reinitializeInputs()
+    removeAllWalls(1000)
+    boundingBoxes = updateActionSequence('final_execution', *proposedActionSequence, color='blue')
+    print('Bounding boxes of final movement:', boundingBoxes)
+
+    # N = 10
+    # for i in range(N):
+    #     updateActionSequence('move' + str(i), actionSequence[1] / N, color=['red', 'yellow'][i % 2])
+    # print(actionSequence[:10])
+    # updateActionSequence('move1', actionSequence[0], actionSequence[1] / 2, color='red')
+    # updateActionSequence('move2', [-30 * pi/180, 0], color='blue')
+    # updateActionSequence('move3', actionSequence[1] / 2, color='red')
+    # updateActionSequence(*actionSequence[2:6], color='yellow')
+    # # updateActionSequence(actionSequence[8], color='yellow')
+    # updateActionSequence(actionSequence[1] / 2, color='red')
+    # updateActionSequence(actionSequence[1] / 2, color='yellow')
+    # updateActionSequence(actionSequence[1] / 2)
+    # updateActionSequence([-0.001, 0])
+    # updateActionSequence(actionSequence[1] / 3)
+    # updateActionSequence('move1', *actionSequence[:5])
+    # for i in range()
 
     # Tests
     # print(window.mapPhysicalDimensionsToPixels(physicalSpace[0], axis=0),
@@ -97,5 +220,15 @@ if __name__ == '__main__':
     # print(passageSizeX, passageSizeY)
     # print(NUM_PASSAGES_X * passageSizeX + (NUM_PASSAGES_X + 1) * wallSizeX)
     # print(NUM_PASSAGES_Y * passageSizeY + (NUM_PASSAGES_Y + 1) * wallSizeY)
+    print("Theoretical runtime:", sum(allTimes))
+
+    START_TIME = 30
+    TIME_PER_COMPUTATION_STEP = 10
+    print('Theoretical runtime, adding in heuristics for computation time:',
+          sum(allTimes) + START_TIME + TIME_PER_COMPUTATION_STEP * (numActions - 1))
 
     sys.exit(app.exec_())
+
+
+if __name__ == '__main__':
+    main()

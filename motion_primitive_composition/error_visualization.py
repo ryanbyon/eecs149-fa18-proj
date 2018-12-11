@@ -68,6 +68,9 @@ class ErrorVisualizationWindow(QtWidgets.QWidget):
         self._backgroundPaintObjects.pop(name, None)
         self._foregroundPaintObjects.pop(name, None)
 
+    def removeAllForegroundPaintObjects(self):
+        self._foregroundPaintObjects = {}
+
     def mapPhysicalDimensionsToPixels(self, physicalDimension: float, axis: int) -> float:
         return physicalDimension * self._windowSize[axis] // self._physicalSpace[axis]
 
@@ -89,10 +92,13 @@ class ErrorVisualizationWindow(QtWidgets.QWidget):
             toWrite += str(textSnippet) + " "
         self._logFrame.append(toWrite)
 
+    @property
+    def windowSize(self):
+        return self._windowSize
+
     """
     Overriden functions
     """
-
     def paintEvent(self, event: QtGui.QPaintEvent):
         qp = QtGui.QPainter(self)
         # br = QtGui.QBrush(QtGui.QColor('red'))
