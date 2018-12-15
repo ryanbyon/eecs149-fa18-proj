@@ -7,12 +7,12 @@ from projection import projection
 from math import ceil
 
 # MAGIC NUMBERS
-WALL_THRESHOLD_DOWNSIZING = 80 # When downsizing the maze image to generate maze grid
+WALL_THRESHOLD_DOWNSIZING = 50 # When downsizing the maze image to generate maze grid
 WALL_THRESHOLD_UPSIZING = 0 # When upsizing, maze walls should already be 255 or 0
 
 # Wall color thresholds
 wall_lower_bgr = np.asarray([0, 0, 90])
-wall_upper_bgr = np.asarray([55, 55, 180])
+wall_upper_bgr = np.asarray([70, 65, 190])
 
 wall_color = [12, 12, 90]
 RED = [0, 0, 255]

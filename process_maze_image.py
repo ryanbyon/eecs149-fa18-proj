@@ -29,7 +29,7 @@ image = cv2.imread(args["image"])
 robot = cv2.imread(args["robot"]) # It's facing left
 
 # Threshold values for maze corner detection (green)
-lower =	np.array([20, 140, 140], dtype="uint8")
+lower =	np.array([20, 110, 120], dtype="uint8")
 upper = np.array([80, 220, 220], dtype = "uint8")
 
 # Desired resolution of projected image
@@ -46,7 +46,9 @@ grid_width, grid_height = width // 13, height // 13
 # Desired downscale factor from projected image to maze grid
 # Units of MILLIMETERS SQUARED PER GRID SQUARE or 
 # MILLIMETERS PER GRID SQUARE LENGTH
-desired_downscale_factor = 8
+desired_downscale_factor = 16
+
+CM_PER_GRID_SQUARE = desired_downscale_factor / DESIRED_PIXELS_PER_CM
 
 # Threshold when processing grayscaled projected maze image
 wall_threshold = 210
@@ -61,12 +63,22 @@ def find_path_for_robot_from_image_and_directions(maze_image, robot_image, direc
 	robot_center_gridsquare = (robot_center[1] // desired_downscale_factor, robot_center[0] // desired_downscale_factor)
 	
 	y, x = robot_center_gridsquare
+	y, x = CM_PER_GRID_SQUARE * y, CM_PER_GRID_SQUARE * x
+	
 	angle_from_RIGHT = clip_to_range(180 + angle) * math.pi / 180
 	robot_coords_npy = np.asarray((x, y, angle_from_RIGHT))
 	
 	#np.save("maze_images/robot_coords", robot_coords_npy)
 
 	path = find_path(robot_center_gridsquare, directions, angle)
+	
+	if len(path) == 0:
+		return path
+	
+	for i in range(len(path)):
+		if i % 2 == 1:
+			path[i] *= CM_PER_GRID_SQUARE
+			
 	print(path, flush=True)
 	end_findpath_time = time.clock()
 	print("Time to look at image and recompute path: " + str(end_findpath_time - start_findpath_time) + " seconds")
@@ -84,20 +96,20 @@ def find_path_for_robot_from_image_and_directions(maze_image, robot_image, direc
 	
 	# call error propagation function
 
-	after_error_prop = execute_motion_composition(robot_coords_npy, wall_booleans, numpy_path)
+	#after_error_prop = execute_motion_composition(robot_coords_npy, wall_booleans, numpy_path)
 	
 	after_error_prop_path = []
-	for i in range(len(after_error_prop)):
-		path_element_angle, path_element_distance = after_error_prop[i][0] * 180 / math.pi, after_error_prop[i][1]
-		if i % 2 == 0:
-			after_error_prop_path.append(path_element_angle)
-		else:
-			after_error_prop_path.append(path_element_distance)
-	if len(after_error_prop_path) % 2 == 1:
-		after_error_prop_path.append(0)
-	print("After error prop: ", after_error_prop_path, flush=True)
+	#for i in range(len(after_error_prop)):
+	#	path_element_angle, path_element_distance = after_error_prop[i][0] * 180 / math.pi, after_error_prop[i][1]
+	#	if i % 2 == 0:
+	#		after_error_prop_path.append(path_element_angle)
+	#	else:
+	#		after_error_prop_path.append(path_element_distance)
+	#if len(after_error_prop_path) % 2 == 1:
+	#	after_error_prop_path.append(0)
+	#print("After error prop: ", after_error_prop_path, flush=True)
 
-	return after_error_prop_path
+	return path
 
 def send_path_on_bluetooth(path):
 	return
@@ -144,10 +156,10 @@ def generate_navigation_directions_from_image(maze_image, robot_image):
 	start_bfs_time = time.clock()
 	compute_wall_distances(bools, distances_from_walls)
 
-	bools_buffered = distances_from_walls <= 1
+	bools_buffered = distances_from_walls <= 3 * radius // 4
 	# np.save("maze_images/wall_booleans", bools_buffered)
 	
-	breadth_first_search(bools_buffered, (37,37), directions_simple, distances)
+	breadth_first_search(bools_buffered, (37//2,37//2), directions_simple, distances)
 	directions_smart = create_direction_matrix(bools_buffered, distances, distances_from_walls)
 	end_bfs_time = time.clock()
 
@@ -164,11 +176,11 @@ def generate_navigation_directions_from_image(maze_image, robot_image):
 	upsized_magic = cv2.resize(directions_simple, dsize=(padded.shape[1], padded.shape[0]), interpolation=cv2.INTER_NEAREST)
 	cv2.imwrite("magic1.png", upsized_magic)
 	
+	upsized_distances = cv2.resize(distances, dsize=(padded.shape[1], padded.shape[0]), interpolation=cv2.INTER_NEAREST)
+	cv2.imwrite("distances2.png", upsized_distances)
+	upsized_distances_from_walls = cv2.resize(distances_from_walls, dsize=(padded.shape[1], padded.shape[0]), interpolation=cv2.INTER_NEAREST)
+	cv2.imwrite("wall_distances_2.png", upsized_distances_from_walls * 28)
 	return directions_smart, bools_buffered
-
-	# cv2.imwrite("wall_distances_2.png", d<img src="maze_images/current_maze.jpg" alt="" /><img src="maze_images/current_maze.jpg" alt="" />istances_from_walls * 28)
-	
-	# cv2.imwrite("distances2.png", distances)
 	
 
 	# path_modified = [str(el) if type(el) == int else str(el.value) for el in path]

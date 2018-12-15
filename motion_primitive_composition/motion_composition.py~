@@ -16,7 +16,7 @@ from PyQt5 import QtWidgets
 
 motion_primitive_composition_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(motion_primitive_composition_path)
-from motion_primitive_composition.differential_dynamics import RotatingDubinsModel
+from motion_primitive_composition.dynamics import RotatingDubinsModel
 from motion_primitive_composition.error_visualization import ErrorVisualizationWindow
 
 from typing import List, Dict, Union
@@ -36,14 +36,12 @@ def boundingBoxIntersection(boundingBox, window: ErrorVisualizationWindow, wall_
     xmin_px, ymin_px = window.mapPhysicalCoordinatesInStandardCoordinateFrameToPixels((xmin_cm, ymin_cm))
     xmax_px, ymax_px = window.mapPhysicalCoordinatesInStandardCoordinateFrameToPixels((xmax_cm, ymax_cm))
     ymin_px, ymax_px = minimax(ymin_px, ymax_px)
-    print('Bounding box:', xmin_cm, xmax_cm, ymin_cm, ymax_cm)
     R, C = len(wall_booleans), len(wall_booleans[0])
     for i in range(int(xmin_px * C // window.windowSize[0]), int(xmax_px * C // window.windowSize[0] + 1)):
         for j in range(int(ymin_px * R // window.windowSize[1]), int(ymax_px * R // window.windowSize[1] + 1)):
-            if i < 0 or i >= len(wall_booleans[0]) or j < 0 or j >= len(wall_booleans):
+            if i < 0 or i >= len(wall_booleans) or j < 0 or j >= len(wall_booleans[0]):
         		    return True
-            if wall_booleans[j][i]:
-                print('Intersects in square:', i, j)
+            if wall_booleans[i][j]:
                 return True
     return False
 
@@ -63,7 +61,7 @@ def addDubinsBoundingBox(name: str, window: ErrorVisualizationWindow, dubinsBoun
         (dubinsBoundingBox[0][0], dubinsBoundingBox[1][0]))
     x_max, y_max = window.mapPhysicalCoordinatesInStandardCoordinateFrameToPixels(
         (dubinsBoundingBox[0][1], dubinsBoundingBox[1][1]))
-    window.addForegroundBox(name, x_min, y_min, x_max - x_min, y_max - y_min, color=color)
+    #window.addForegroundBox(name, x_min, y_min, x_max - x_min, y_max - y_min, color=color)
 
 
 def minimax(a, b):
@@ -96,7 +94,6 @@ def execute_motion_composition(startPosition, wall_booleans, actionSequence) -> 
 
     # Define walls
     # wall_booleans = np.load(motion_primitive_composition_path + '/' + wallBooleansFile)
-    print(len(wall_booleans), len(wall_booleans[0]))
     GRID_SIZE_Y_INCHES = TOTAL_HEIGHT_INCHES / len(wall_booleans)
     GRID_SIZE_X_INCHES = TOTAL_WIDTH_INCHES / len(wall_booleans[0])
     gridSizeX = window.mapPhysicalDimensionsToPixels(GRID_SIZE_X_INCHES * INCH_TO_CM, axis=0)
@@ -105,28 +102,26 @@ def execute_motion_composition(startPosition, wall_booleans, actionSequence) -> 
         for j in range(len(wall_booleans[0])):
             if wall_booleans[i][j]:
                 pass
-                window.addBackgroundBox('wall_' + str(i) + ',' + str(j), j * gridSizeX, i * gridSizeY, gridSizeX,
-                                        gridSizeY)
+                #window.addBackgroundBox('wall_' + str(i) + ',' + str(j), j * gridSizeX, i * gridSizeY, gridSizeX,
+                #                        gridSizeY)
 
     # Adding in the car
-    CAR_RADIUS = 2 / INCH_TO_CM  # Adjust
+    CAR_RADIUS = 1 / INCH_TO_CM  # Adjust
     carRadius = window.mapPhysicalDimensionsToPixels(CAR_RADIUS, axis=0)
 
     # startPosition = np.load(motion_primitive_composition_path + '/' + carStartPositionFile)
     startPosition[1] = TOTAL_HEIGHT_INCHES * INCH_TO_CM - startPosition[1]
-    print(TOTAL_WIDTH_INCHES * INCH_TO_CM, TOTAL_HEIGHT_INCHES * INCH_TO_CM)
-    print('\n\nCar start position:', startPosition, "\n\n")
     
     carCoordinates = window.mapPhysicalCoordinatesInStandardCoordinateFrameToPixels(
         startPosition[0:2])  # Start position given in image coordinates
-    print(carCoordinates)
-    window.log('Car coordinates:', carCoordinates)
-    window.addForegroundCircle('car', *carCoordinates, carRadius)
+    #window.log('Car coordinates:', carCoordinates)
+    #window.addForegroundCircle('car', *carCoordinates, carRadius)
 
     def removeAllBoundingBoxes(delay_ms=1000):
-        window.delayGUI(delay_ms)
-        window.removeAllForegroundPaintObjects()
-        window.addForegroundCircle('car', *carCoordinates, carRadius)
+        pass
+        #window.delayGUI(delay_ms)
+        #window.removeAllForegroundPaintObjects()
+        #window.addForegroundCircle('car', *carCoordinates, carRadius)
 
     db = RotatingDubinsModel()
     x, y, theta, v, omega, dt = db.variables
@@ -180,7 +175,7 @@ def execute_motion_composition(startPosition, wall_booleans, actionSequence) -> 
                 addDubinsBoundingBox(name + '_' + str(i), window, boundingBox, color=color)
             else:
                 addDubinsBoundingBox(name + '_' + str(i), window, boundingBox, color=colors[i % len(colors)])
-            window.delayGUI(100)
+            #window.delayGUI(100)
             boundingBoxes.append(boundingBox)
 
         lastBoundingBox = boundingBoxes[-1]
@@ -217,7 +212,6 @@ def execute_motion_composition(startPosition, wall_booleans, actionSequence) -> 
                 reinitializeInputs()
                 return pathPlanning(actionSequence[:1] / 2, depth=depth + 1)
             """
-            #"""
             if intersectsWall and i > 0 and depth > MAX_DEPTH:
                 return actionSequence[:i]  # You can do all moves up until move i without crashing
             elif intersectsWall and i > 0 and depth <= MAX_DEPTH:
@@ -228,17 +222,10 @@ def execute_motion_composition(startPosition, wall_booleans, actionSequence) -> 
             elif intersectsWall and i == 0 and depth <= MAX_DEPTH:
                 reinitializeInputs()
                 return pathPlanning(actionSequence[:1] / 2, depth=depth + 1)
-            """
-            if intersectsWall and depth > MAX_DEPTH:
-                return actionSequence[:i]  # You can do all moves up until move i without crashing
-            elif intersectsWall and depth <= MAX_DEPTH:
-                reinitializeInputs()
-                return pathPlanning(list(actionSequence[:i]) + list([actionSequence[i]/2]), depth=depth+1)
-            """
             #"""
         return actionSequence  # If none of the bounding boxes intersects the wall, you're set to go!
 
-    plannedActionSequence = actionSequence[:8]
+    plannedActionSequence = actionSequence[:6]
     print(plannedActionSequence)
     proposedActionSequence = pathPlanning(plannedActionSequence)
     print(proposedActionSequence)
@@ -256,7 +243,7 @@ def execute_motion_composition(startPosition, wall_booleans, actionSequence) -> 
     print('Theoretical runtime, adding in heuristics for computation time:',
           sum(allTimes) + START_TIME + TIME_PER_COMPUTATION_STEP * (numActions - 1))
 
-    window.delayGUI(delay_ms=4000)
+    #window.delayGUI(delay_ms=4000)
     app.closeAllWindows()
     return proposedActionSequence
 

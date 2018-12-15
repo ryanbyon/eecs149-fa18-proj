@@ -20,8 +20,6 @@ class Dynamics:
         self._variables = variables
         self._dynamics = dynamics
 
-        self._differentialEquations = {var: sympy.diff(self._dynamics, var) for var in self._variables}
-
     def calculateErrorMargins(self, predictedInputs: Dict[sympy.Symbol, float], errors: Dict[sympy.Symbol, float],
                               display: bool = True, log=print):
         log("Calculating error margins")
@@ -40,51 +38,39 @@ class Dynamics:
         # print('Normal predicted output: ', predictedOutput)
 
         log("Evaluating errors:")
-        listToFloat = lambda lst: [float(x) for x in lst]
-        X = listToFloat(self._dynamics.subs(allVariables).n())
-        dF_dx = {symb: self._differentialEquations[symb].subs(allVariables).n() for symb in predictedInputs}
-        print(X)
-        print(dF_dx)
-        print([list(dF_dx[x]) for x in dF_dx])
-        dX = sum(errors.get(symb, 0) * np.array(dF_dx[symb]) for symb in predictedInputs)[0]
-        print('Predicted output:', X)
-        print('Differential variances:', dX)
-        # outputsForDifferentErrors = []
-        # relevantErrorVariables = {symb: error for symb, error in errors.items() if symb in predictedInputs}
-        # relevantErrorVariables.update({symb: 0 for symb in self._constants})
-        # importantErrorVariables = {symb: error for symb, error in relevantErrorVariables.items() if error != 0}
-        # for modifiedErrorVariablesNum in range(len(importantErrorVariables) + 1):
-        #     possibleModifiedErrorVariables = itertools.combinations(importantErrorVariables, modifiedErrorVariablesNum)
-        #     for modifiedErrorVariables in possibleModifiedErrorVariables:
-        #         # Calculate the error if modifiedErrorVariables had negative values instead
-        #         newErrors = {symb: -error for symb, error in importantErrorVariables.items() if
-        #                      symb in modifiedErrorVariables}
-        #         allErrors = {**relevantErrorVariables, **newErrors}
-        #         newValues = {}
-        #         for symb in predictedInputs:
-        #             newValues[symb] = predictedInputs[symb] + allErrors[symb]
-        #         calculatedValue = [float(x) for x in self._dynamics.subs(newValues).n()]
-        #
-        #         if display:
-        #             log('Value with negative errors at', modifiedErrorVariables, ':', calculatedValue)
-        #         outputsForDifferentErrors.append(calculatedValue)
-        #
-        #         # Calculate the error if modifiedErrorVariables had zero error instead
-        #         newErrors = {symb: 0 for symb, error in importantErrorVariables.items() if
-        #                      symb in modifiedErrorVariables}
-        #         allErrors = {**relevantErrorVariables, **newErrors}
-        #         newValues = {}
-        #         for symb in predictedInputs:
-        #             newValues[symb] = predictedInputs[symb] + allErrors[symb]
-        #         calculatedValue = [float(x) for x in self._dynamics.subs(newValues).n()]
-        #
-        #         if display:
-        #             log('Value with zero errors at', modifiedErrorVariables, ':', calculatedValue)
-        #         outputsForDifferentErrors.append(calculatedValue)
+        outputsForDifferentErrors = []
+        relevantErrorVariables = {symb: error for symb, error in errors.items() if symb in predictedInputs}
+        importantErrorVariables = {symb: error for symb, error in relevantErrorVariables.items() if error != 0}
+        for modifiedErrorVariablesNum in range(len(importantErrorVariables) + 1):
+            possibleModifiedErrorVariables = itertools.combinations(importantErrorVariables, modifiedErrorVariablesNum)
+            for modifiedErrorVariables in possibleModifiedErrorVariables:
+                # Calculate the error if modifiedErrorVariables had negative values instead
+                newErrors = {symb: -error for symb, error in importantErrorVariables.items() if
+                             symb in modifiedErrorVariables}
+                allErrors = {**relevantErrorVariables, **newErrors}
+                newValues = {}
+                for symb in predictedInputs:
+                    newValues[symb] = predictedInputs[symb] + allErrors[symb]
+                calculatedValue = [float(x) for x in self._dynamics.subs(newValues).n()]
 
-        # boundingBox = [(min(lst), max(lst)) for lst in list(zip(*outputsForDifferentErrors))]
-        boundingBox = [(x - abs(dx), x + abs(dx)) for x, dx in zip(X, dX)]
-        print('Bounding box:', boundingBox)
+                if display:
+                    log('Value with negative errors at', modifiedErrorVariables, ':', calculatedValue)
+                outputsForDifferentErrors.append(calculatedValue)
+
+                # Calculate the error if modifiedErrorVariables had zero error instead
+                newErrors = {symb: 0 for symb, error in importantErrorVariables.items() if
+                             symb in modifiedErrorVariables}
+                allErrors = {**relevantErrorVariables, **newErrors}
+                newValues = {}
+                for symb in predictedInputs:
+                    newValues[symb] = predictedInputs[symb] + allErrors[symb]
+                calculatedValue = [float(x) for x in self._dynamics.subs(newValues).n()]
+
+                if display:
+                    log('Value with zero errors at', modifiedErrorVariables, ':', calculatedValue)
+                outputsForDifferentErrors.append(calculatedValue)
+
+        boundingBox = [(min(lst), max(lst)) for lst in list(zip(*outputsForDifferentErrors))]
         if display:
             log('Bounding box:', boundingBox)
             log('Returning bounding box')

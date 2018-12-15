@@ -106,10 +106,12 @@ def create_direction_matrix(grid, distances, wall_distances):
 	result = np.zeros(shape=grid.shape, dtype="uint8")
 	for i in range(len(result)):
 		for j in range(len(result[0])):
-			if not grid[i][j] and distances[i][j] != 0:
+			if not grid[i][j] and distances[i][j] >= 1:
 				candidates = neighbors((i, j), grid)
 				best_direction = min(candidates, key=lambda c: (distances[c[0][0]][c[0][1]], -wall_distances[c[0][0]][c[0][1]]))
 				result[i][j] = best_direction[1].opposite().value
+			else:
+				result[i][j] = Direction.NOWHERE.value
 	return result
 
 def find_path(source, directions, initial_angle):
